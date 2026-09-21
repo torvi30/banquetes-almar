@@ -29,7 +29,7 @@ async function cargarDetalleGaleria() {
     const allItems = await dbService.getGallery();
 
     const data = categoriaParam
-      ? allItems.filter(item => String(item.categoria || "").trim().toLowerCase() === categoriaParam.trim().toLowerCase())
+      ? allItems.filter(item => String(item.category || item.categoria || "").trim().toLowerCase() === categoriaParam.trim().toLowerCase())
       : allItems;
 
     if (!Array.isArray(data) || !data.length) {
@@ -43,37 +43,44 @@ async function cargarDetalleGaleria() {
       return;
     }
 
-    publicGalleryGrid.innerHTML = data.map(item => `
-      <article class="gallery-card-pro gallery-card-public gallery-detail-card">
-        <div class="gallery-card-image-wrap gallery-detail-image-wrap">
-          <img
-            src="${item.imagen}"
-            alt="${item.titulo || "Montaje Almar"}"
-            class="gallery-card-image public-gallery-view"
-            loading="lazy"
-            data-imagen="${item.imagen}"
-            data-titulo="${item.titulo || "Montaje Almar"}"
-            data-descripcion="${item.descripcion || ""}"
-          />
-        </div>
+    publicGalleryGrid.innerHTML = data.map(item => {
+      const img = item.imageUrl || item.imagen;
+      const title = item.title || item.titulo || "Montaje Almar";
+      const desc = item.description || item.descripcion || "";
+      const cat = item.category || item.categoria || "Gala";
 
-        <div class="gallery-card-content gallery-detail-content">
-          <span class="event-chip">${item.categoria || "Gala"}</span>
-          <h3>${item.titulo || "Montaje de Evento"}</h3>
-          <p>${item.descripcion || ""}</p>
+      return `
+        <article class="gallery-card-pro gallery-card-public gallery-detail-card">
+          <div class="gallery-card-image-wrap gallery-detail-image-wrap">
+            <img
+              src="${img}"
+              alt="${title}"
+              class="gallery-card-image public-gallery-view"
+              loading="lazy"
+              data-imagen="${img}"
+              data-titulo="${title}"
+              data-descripcion="${desc}"
+            />
+          </div>
 
-          <button
-            type="button"
-            class="btn btn-secondary public-gallery-open-btn public-gallery-view"
-            data-imagen="${item.imagen}"
-            data-titulo="${item.titulo || "Montaje Almar"}"
-            data-descripcion="${item.descripcion || ""}"
-          >
-            Ver en alta resolución
-          </button>
-        </div>
-      </article>
-    `).join("");
+          <div class="gallery-card-content gallery-detail-content">
+            <span class="event-chip">${cat}</span>
+            <h3>${title}</h3>
+            <p>${desc}</p>
+
+            <button
+              type="button"
+              class="btn btn-secondary public-gallery-open-btn public-gallery-view"
+              data-imagen="${img}"
+              data-titulo="${title}"
+              data-descripcion="${desc}"
+            >
+              Ver en alta resolución
+            </button>
+          </div>
+        </article>
+      `;
+    }).join("");
 
     document.querySelectorAll(".public-gallery-view").forEach(el => {
       el.addEventListener("click", () => {

@@ -66,8 +66,8 @@ async function cargarMetricas() {
     const reservas = await dbService.getReservations();
     const payments = await dbService.getPayments();
 
-    const totalIngresos = payments.reduce((acc, p) => acc + (Number(p.monto) || 0), 0);
-    const totalPendiente = reservas.reduce((acc, r) => acc + (Number(r.saldo) || 0), 0);
+    const totalIngresos = payments.reduce((acc, p) => acc + (Number(p.amount ?? p.monto) || 0), 0);
+    const totalPendiente = reservas.reduce((acc, r) => acc + (Number(r.balanceAmount ?? r.saldo) || 0), 0);
     const totalQuotesCount = quotes.length;
     const totalEventosCount = reservas.length;
 
@@ -87,8 +87,8 @@ async function cargarSolicitudesPendientes() {
   try {
     const quotes = await dbService.getQuotes();
     const pendientes = quotes.filter(q => {
-      const est = String(q.estado || "").toLowerCase();
-      return est === "pendiente" || est === "nuevo" || est === "contactado";
+      const est = String(q.status || q.estado || "").toLowerCase();
+      return est === "pendiente" || est === "pending" || est === "nuevo" || est === "new" || est === "contactado";
     }).slice(0, 5);
 
     if (!pendientes.length) {
@@ -97,27 +97,33 @@ async function cargarSolicitudesPendientes() {
     }
 
     pendingQuotesList.innerHTML = pendientes.map(q => {
-      const telefonoLimpio = String(q.telefono || "").replace(/\D/g, "");
+      const phone = q.phone || q.telefono || "";
+      const name = q.name || q.nombre || "Cliente";
+      const eventType = q.eventType || q.evento || "Celebración";
+      const guestCount = q.guestCount ?? q.personas ?? 0;
+      const status = q.status || q.estado || "Pendiente";
+      const eventDate = q.eventDate || q.fechaEvento || q.createdAt;
+      const telefonoLimpio = String(phone).replace(/\D/g, "");
       const wpUrl = telefonoLimpio
-        ? `https://wa.me/57${telefonoLimpio}?text=${encodeURIComponent(`Hola ${q.nombre}, te saludamos de Banquetes Almar respecto a tu cotización para ${q.evento || "tu evento"}.`)}`
+        ? `https://wa.me/57${telefonoLimpio}?text=${encodeURIComponent(`Hola ${name}, te saludamos de Banquetes Almar respecto a tu cotización para ${eventType}.`)}`
         : null;
 
       return `
         <article class="control-card-item">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.4rem;">
             <div>
-              <h4 style="color: #fff; font-size: 0.96rem; margin: 0 0 0.2rem 0;">${q.nombre || "Cliente"}</h4>
+              <h4 style="color: #fff; font-size: 0.96rem; margin: 0 0 0.2rem 0;">${name}</h4>
               <p style="color: var(--apple-text-secondary); font-size: 0.82rem; margin: 0;">
-                ${q.evento || "Celebración"} · ${q.personas || 0} personas
+                ${eventType} · ${guestCount} personas
               </p>
             </div>
             <span style="font-size: 0.75rem; background: rgba(212,175,55,0.18); color: var(--gold-light); border: 1px solid rgba(212,175,55,0.35); padding: 3px 10px; border-radius: 999px; font-weight: 600;">
-              ${q.estado || "Pendiente"}
+              ${status}
             </span>
           </div>
 
           <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: #888; margin-top: 0.6rem;">
-            <span>📅 ${formatearFecha(q.createdAt || q.fechaEvento)}</span>
+            <span>📅 ${formatearFecha(eventDate)}</span>
             <div style="display: flex; gap: 0.6rem;">
               ${wpUrl ? `<a href="${wpUrl}" target="_blank" rel="noopener noreferrer" style="color: #25d366; font-weight: 600; text-decoration: none;">💬 WhatsApp</a>` : ""}
               <a href="./cotizaciones.html" style="color: var(--gold-light); font-weight: 600; text-decoration: none;">Ver ➔</a>
@@ -141,8 +147,8 @@ async function cargarProximosEventos() {
 
     // Ordenar cronológicamente
     const ordenados = reservas
-      .filter(r => r.fecha_evento && String(r.estado || "").toLowerCase() !== "cancelada")
-      .sort((a, b) => new Date(a.fecha_evento) - new Date(b.fecha_evento))
+      .filter(r => (r.eventDate || r.fecha_evento) && String(r.status || r.estado || "").toLowerCase() !== "cancelada" && String(r.status || r.estado || "").toLowerCase() !== "cancelled")
+      .sort((a, b) => new Date(a.eventDate || a.fecha_evento) - new Date(b.eventDate || b.fecha_evento))
       .slice(0, 5);
 
     if (!ordenados.length) {
@@ -151,22 +157,28 @@ async function cargarProximosEventos() {
     }
 
     upcomingEventsList.innerHTML = ordenados.map(ev => {
+      const client = ev.clientName || ev.cliente || "Evento Almar";
+      const eventType = ev.eventType || ev.tipo_evento || "Evento";
+      const location = ev.location || ev.locacion || "Salón Marinilla";
+      const status = ev.status || ev.estado || "Confirmada";
+      const date = ev.eventDate || ev.fecha_evento;
+
       return `
         <article class="control-card-item">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.4rem;">
             <div>
-              <h4 style="color: #fff; font-size: 0.96rem; margin: 0 0 0.2rem 0;">${ev.cliente || "Evento Almar"}</h4>
+              <h4 style="color: #fff; font-size: 0.96rem; margin: 0 0 0.2rem 0;">${client}</h4>
               <p style="color: var(--apple-text-secondary); font-size: 0.82rem; margin: 0;">
-                ${ev.tipo_evento || "Evento"} · 📍 ${ev.locacion || "Salón Marinilla"}
+                ${eventType} · 📍 ${location}
               </p>
             </div>
             <span style="font-size: 0.75rem; background: rgba(80, 200, 120, 0.15); color: #9df0b5; border: 1px solid rgba(80, 200, 120, 0.35); padding: 3px 10px; border-radius: 999px; font-weight: 600;">
-              ${ev.estado || "Confirmada"}
+              ${status}
             </span>
           </div>
 
           <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: #888; margin-top: 0.6rem;">
-            <span style="color: #ffffff; font-weight: 600;">🗓️ ${formatearFecha(ev.fecha_evento)}</span>
+            <span style="color: #ffffff; font-weight: 600;">🗓️ ${formatearFecha(date)}</span>
             <div style="display: flex; gap: 0.6rem;">
               <a href="./contrato.html?id=${ev.id}" target="_blank" style="color: #a0c4ff; font-weight: 600; text-decoration: none;">📄 Contrato</a>
               <a href="./reservas.html" style="color: var(--gold-light); font-weight: 600; text-decoration: none;">Detalles ➔</a>
@@ -191,11 +203,11 @@ async function cargarAlertasCobro() {
     // Filtrar eventos con saldo pendiente mayor a cero
     const conSaldo = reservas
       .filter(r => {
-        const saldo = Number(r.saldo || 0);
-        const est = String(r.estado || "").toLowerCase();
-        return saldo > 0 && est !== "cancelada";
+        const saldo = Number(r.balanceAmount ?? r.saldo ?? 0);
+        const est = String(r.status || r.estado || "").toLowerCase();
+        return saldo > 0 && est !== "cancelada" && est !== "cancelled";
       })
-      .sort((a, b) => new Date(a.fecha_evento || 0) - new Date(b.fecha_evento || 0))
+      .sort((a, b) => new Date(a.eventDate || a.fecha_evento || 0) - new Date(b.eventDate || b.fecha_evento || 0))
       .slice(0, 5);
 
     if (!conSaldo.length) {
@@ -204,16 +216,19 @@ async function cargarAlertasCobro() {
     }
 
     paymentAlertsList.innerHTML = conSaldo.map(ev => {
-      const saldoNum = Number(ev.saldo || 0);
-      const totalNum = Number(ev.total || ev.valor_total || (saldoNum + (Number(ev.abono) || 0)));
+      const saldoNum = Number(ev.balanceAmount ?? ev.saldo ?? 0);
+      const totalNum = Number(ev.totalAmount ?? ev.total ?? ev.valor_total ?? (saldoNum + (Number(ev.depositAmount ?? ev.abono) || 0)));
+      const client = ev.clientName || ev.cliente || "Cliente";
+      const eventType = ev.eventType || ev.tipo_evento || "Evento";
+      const date = ev.eventDate || ev.fecha_evento;
 
       return `
         <article class="control-card-item">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.4rem;">
             <div>
-              <h4 style="color: #fff; font-size: 0.96rem; margin: 0 0 0.2rem 0;">${ev.cliente || "Cliente"}</h4>
+              <h4 style="color: #fff; font-size: 0.96rem; margin: 0 0 0.2rem 0;">${client}</h4>
               <p style="color: var(--apple-text-secondary); font-size: 0.82rem; margin: 0;">
-                ${ev.tipo_evento || "Evento"} · Fecha: ${formatearFecha(ev.fecha_evento)}
+                ${eventType} · Fecha: ${formatearFecha(date)}
               </p>
             </div>
             <span style="font-size: 0.78rem; color: #ffaa5a; font-weight: 700; background: rgba(255, 170, 90, 0.14); border: 1px solid rgba(255, 170, 90, 0.35); padding: 3px 9px; border-radius: 999px;">
@@ -249,15 +264,16 @@ async function cargarAnuncioSuperiorWidget() {
   try {
     const data = await dbService.getAnnouncement();
     if (data) {
-      if (dashIcon) dashIcon.textContent = data.icono || "✨";
-      if (dashTitle) dashTitle.textContent = data.titulo || "";
-      if (dashMsg) dashMsg.textContent = data.mensaje || "";
+      if (dashIcon) dashIcon.textContent = data.icon || data.icono || "✨";
+      if (dashTitle) dashTitle.textContent = data.title || data.titulo || "";
+      if (dashMsg) dashMsg.textContent = data.message || data.mensaje || "";
       if (dashBadge) {
         dashBadge.textContent = data.badge || "Activo";
         dashBadge.style.display = data.badge ? "inline-block" : "none";
       }
       if (dashStatus) {
-        if (data.activo !== false) {
+        const isActive = (data.isActive !== undefined ? data.isActive : data.activo) !== false;
+        if (isActive) {
           dashStatus.style.background = "rgba(52, 199, 89, 0.15)";
           dashStatus.style.color = "#34c759";
           dashStatus.style.borderColor = "rgba(52, 199, 89, 0.3)";
@@ -329,19 +345,19 @@ async function exportFinancialReport() {
     const rows = reservas.map(r => {
       const codeId = String(r.id || "001").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(-6) || "001";
       const folio = `ALM-${codeId}`;
-      const fecha = r.fecha_evento || "Por Definir";
-      const cliente = r.cliente || "Cliente";
-      const telefono = r.telefono || "";
-      const tipo = r.tipo_evento || "Evento Social";
-      const locacion = r.locacion || "Salón Almar Marinilla";
-      const invitados = r.personas || r.invitados || 0;
+      const fecha = r.eventDate || r.fecha_evento || "Por Definir";
+      const cliente = r.clientName || r.cliente || "Cliente";
+      const telefono = r.phone || r.telefono || "";
+      const tipo = r.eventType || r.tipo_evento || "Evento Social";
+      const locacion = r.location || r.locacion || "Salón Almar Marinilla";
+      const invitados = r.guestCount ?? r.personas ?? r.invitados ?? 0;
 
       // Calcular recaudos vinculados
-      const pagosEvento = payments.filter(p => String(p.evento_id || p.reserva_id) === String(r.id));
-      const totalPagosCalc = pagosEvento.reduce((sum, p) => sum + Number(p.monto || 0), 0);
+      const pagosEvento = payments.filter(p => String(p.eventId || p.reservationId || p.evento_id || p.reserva_id) === String(r.id));
+      const totalPagosCalc = pagosEvento.reduce((sum, p) => sum + Number(p.amount ?? p.monto ?? 0), 0);
       
-      const totalContratado = Number(r.total || r.valor_total || 0);
-      const totalAbonado = Math.max(Number(r.anticipo || r.abono || 0), totalPagosCalc);
+      const totalContratado = Number(r.totalAmount ?? r.total ?? r.valor_total ?? 0);
+      const totalAbonado = Math.max(Number(r.depositAmount ?? r.anticipo ?? r.abono ?? 0), totalPagosCalc);
       const saldoPendiente = Math.max(0, totalContratado - totalAbonado);
       const pctPagado = totalContratado > 0 ? Math.min(100, Math.round((totalAbonado / totalContratado) * 100)) : 0;
 
@@ -356,7 +372,7 @@ async function exportFinancialReport() {
         estadoFinanciero = `ABONO PARCIAL (${pctPagado}%)`;
       }
 
-      const estadoReserva = r.estado || "Confirmada";
+      const estadoReserva = r.status || r.estado || "Confirmada";
       const cantAbonos = Math.max(pagosEvento.length, totalAbonado > 0 ? 1 : 0);
 
       return [

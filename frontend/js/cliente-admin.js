@@ -228,17 +228,17 @@ function renderFinancialStats(reservations, payments) {
   let totalPaid = 0;
 
   reservations.forEach(r => {
-    totalContracted += Number(r.total || r.valor_total || 0);
+    totalContracted += Number(r.totalAmount ?? r.total ?? r.valor_total ?? 0);
   });
 
   if (payments.length > 0) {
     payments.forEach(p => {
-      totalPaid += Number(p.monto || p.valor || 0);
+      totalPaid += Number(p.amount ?? p.monto ?? p.valor ?? 0);
     });
   } else {
     // Si no hay libro contable explícito, sumar anticipos de las reservas
     reservations.forEach(r => {
-      totalPaid += Number(r.anticipo || r.abono || 0);
+      totalPaid += Number(r.depositAmount ?? r.anticipo ?? r.abono ?? 0);
     });
   }
 
@@ -266,9 +266,9 @@ function renderEventsList(reservations) {
   }
 
   eventosCliente.innerHTML = reservations.map(ev => {
-    const total = Number(ev.total || ev.valor_total || 0);
-    const anticipo = Number(ev.anticipo || ev.abono || 0);
-    const saldo = Math.max(0, total - anticipo);
+    const total = Number(ev.totalAmount ?? ev.total ?? ev.valor_total ?? 0);
+    const anticipo = Number(ev.depositAmount ?? ev.anticipo ?? ev.abono ?? 0);
+    const saldo = Number(ev.balanceAmount ?? (Math.max(0, total - anticipo)));
 
     return `
       <article class="history-card-luxury">
@@ -276,19 +276,19 @@ function renderEventsList(reservations) {
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.8rem;">
             <div>
               <h3 style="font-size: 1.15rem; font-weight: 700; color: #f8fafc; margin-bottom: 2px;">
-                ${ev.tipo_evento || "Evento Social"}
+                ${ev.eventType || ev.tipo_evento || "Evento Social"}
               </h3>
               <span style="font-size: 0.75rem; color: #94a3b8;">Folio: ALM-${String(ev.id).toUpperCase().slice(-6)}</span>
             </div>
             <span style="font-size: 0.72rem; padding: 2px 8px; border-radius: 6px; background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); font-weight: 700;">
-              ${ev.estado || "Confirmada"}
+              ${ev.status || ev.estado || "Confirmada"}
             </span>
           </div>
 
           <div style="font-size: 0.84rem; color: #cbd5e1; display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1rem;">
-            <div>🗓️ <strong>${formatDate(ev.fecha_evento)}</strong> ${ev.hora_evento ? `• ${ev.hora_evento}` : ""}</div>
-            <div>📍 ${ev.locacion || ev.lugar || "Salón Almar Marinilla"}</div>
-            <div>👥 <strong>${ev.personas || 0}</strong> invitados</div>
+            <div>🗓️ <strong>${formatDate(ev.eventDate || ev.fecha_evento)}</strong> ${ev.eventTime || ev.hora_evento ? `• ${ev.eventTime || ev.hora_evento}` : ""}</div>
+            <div>📍 ${ev.location || ev.locacion || ev.lugar || "Salón Almar Marinilla"}</div>
+            <div>👥 <strong>${ev.guestCount ?? ev.personas ?? 0}</strong> invitados</div>
           </div>
 
           <div style="background: rgba(255,255,255,0.03); padding: 0.75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); font-size: 0.83rem; margin-bottom: 1.1rem;">
@@ -326,17 +326,17 @@ function renderEventsList(reservations) {
     btn.addEventListener("click", () => {
       const ev = cachedReservations.find(r => String(r.id) === String(btn.dataset.id));
       if (ev) {
-        const total = Number(ev.total || ev.valor_total || 0);
-        const anticipo = Number(ev.anticipo || ev.abono || 0);
-        const saldo = Math.max(0, total - anticipo);
+        const total = Number(ev.totalAmount ?? ev.total ?? ev.valor_total ?? 0);
+        const anticipo = Number(ev.depositAmount ?? ev.anticipo ?? ev.abono ?? 0);
+        const saldo = Number(ev.balanceAmount ?? (Math.max(0, total - anticipo)));
         openWhatsAppModal({
           id: ev.id,
-          clientName: ev.cliente || (currentCliente ? currentCliente.nombre : "Cliente"),
-          phone: ev.telefono || (currentCliente ? currentCliente.telefono : ""),
-          eventType: ev.tipo_evento,
-          guestCount: ev.personas,
-          location: ev.locacion || ev.lugar,
-          eventDate: ev.fecha_evento,
+          clientName: ev.clientName || ev.cliente || (currentCliente ? (currentCliente.name || currentCliente.nombre) : "Cliente"),
+          phone: ev.phone || ev.telefono || (currentCliente ? (currentCliente.phone || currentCliente.telefono) : ""),
+          eventType: ev.eventType || ev.tipo_evento,
+          guestCount: ev.guestCount ?? ev.personas,
+          location: ev.location || ev.locacion || ev.lugar,
+          eventDate: ev.eventDate || ev.fecha_evento,
           totalAmount: total,
           downPayment: anticipo,
           remainingBalance: saldo,
@@ -364,16 +364,16 @@ function renderPaymentsList(payments) {
     <article class="history-card-luxury">
       <div>
         <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.6rem;">
-          <strong style="font-size: 1.25rem; color: #10b981;">${formatMoney(p.monto || p.valor)}</strong>
+          <strong style="font-size: 1.25rem; color: #10b981;">${formatMoney(p.amount ?? p.monto ?? p.valor)}</strong>
           <span style="font-size: 0.72rem; padding: 2px 8px; border-radius: 6px; background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.3); font-weight: 700;">
-            ${p.estado || "Aprobado"}
+            ${p.status || p.estado || "Aprobado"}
           </span>
         </div>
 
         <div style="font-size: 0.84rem; color: #cbd5e1; display: flex; flex-direction: column; gap: 0.35rem;">
-          <div>📝 Concepto: <strong>${p.concepto || p.tipo_evento || "Abono de evento"}</strong></div>
-          <div>💳 Método: ${p.metodo || "Transferencia Bancaria (Bancolombia)"}</div>
-          <div>🗓️ Fecha: ${formatDate(p.fecha || p.createdAt)}</div>
+          <div>📝 Concepto: <strong>${p.concept || p.concepto || p.eventType || p.tipo_evento || "Abono de evento"}</strong></div>
+          <div>💳 Método: ${p.method || p.metodo || "Transferencia Bancaria (Bancolombia)"}</div>
+          <div>🗓️ Fecha: ${formatDate(p.paymentDate || p.fecha || p.createdAt)}</div>
           ${p.id ? `<div style="font-size: 0.75rem; color: #64748b;">Comprobante ID: ${p.id}</div>` : ""}
         </div>
       </div>
@@ -432,12 +432,12 @@ async function openEditModal() {
         return false;
       }
       return {
-        nombre,
-        telefono,
-        documento: document.getElementById("swalDocumento").value.trim(),
+        name: nombre,
+        phone: telefono,
+        documentId: document.getElementById("swalDocumento").value.trim(),
         email: document.getElementById("swalEmail").value.trim(),
-        direccion: document.getElementById("swalDireccion").value.trim(),
-        tipo_cliente: document.getElementById("swalTipo").value
+        address: document.getElementById("swalDireccion").value.trim(),
+        clientType: document.getElementById("swalTipo").value
       };
     }
   });

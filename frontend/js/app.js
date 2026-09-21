@@ -151,25 +151,25 @@ async function cargarPaquetesDestacados() {
     const packages = await dbService.getPackages();
 
     container.innerHTML = packages.map(pkg => {
-      const inclusions = pkg.inclusiones || pkg.inclusions || [];
+      const inclusions = pkg.inclusions || pkg.inclusiones || [];
       const extraCount = inclusions.length > 4 ? inclusions.length - 4 : 0;
       return `
       <article class="package-card reveal active">
         <div class="package-image-wrap">
-          <img src="${pkg.imagen || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80'}" alt="${pkg.titulo}" class="package-image" loading="lazy" />
+          <img src="${pkg.imageUrl || pkg.imagen || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80'}" alt="${pkg.title || pkg.titulo}" class="package-image" loading="lazy" />
           <span class="package-badge">${pkg.badge || 'Todo Incluido'}</span>
         </div>
         <div class="package-body">
-          <h3 class="package-title">${pkg.titulo}</h3>
-          <p class="package-desc">${pkg.descripcion || ''}</p>
+          <h3 class="package-title">${pkg.title || pkg.titulo}</h3>
+          <p class="package-desc">${pkg.description || pkg.descripcion || ''}</p>
           
           <div class="package-price-wrap">
             <span class="price-label">Desde (por invitado)</span>
-            <span class="price-val">$${(pkg.precioPorPersona || 0).toLocaleString("es-CO")} COP</span>
+            <span class="price-val">$${(pkg.pricePerPerson || pkg.precioPorPersona || 0).toLocaleString("es-CO")} COP</span>
           </div>
 
           <div style="font-size: 0.8rem; color: var(--apple-gold-light); margin-bottom: 0.8rem;">
-            👥 Mínimo sugerido: <strong>${pkg.minimoPersonas || 40} invitados</strong>
+            👥 Mínimo sugerido: <strong>${pkg.minGuests || pkg.minimoPersonas || 40} invitados</strong>
           </div>
 
           <ul class="package-inclusions-list">
@@ -326,15 +326,15 @@ async function cargarGaleria() {
 
     function render(lista) {
       grid.innerHTML = lista.map((item, idx) => {
-        const title = (item.titulo || "Montaje Exclusivo").trim();
-        const category = (item.categoria || "Banquetes Almar").trim();
-        const desc = (item.descripcion || "Diseño y ambientación de gala con mobiliario y producción profesional.").trim();
+        const title = (item.title || item.titulo || "Montaje Exclusivo").trim();
+        const category = (item.category || item.categoria || "Banquetes Almar").trim();
+        const desc = (item.description || item.descripcion || "Diseño y ambientación de gala con mobiliario y producción profesional.").trim();
         const icon = getCategoryIcon(category);
 
         return `
           <article class="public-gallery-card reveal active" data-index="${idx}">
             <div class="public-gallery-thumb-wrap">
-              <img class="public-gallery-thumb" src="${item.imagen || ''}" alt="${title}" loading="lazy" />
+              <img class="public-gallery-thumb" src="${item.imageUrl || item.imagen || ''}" alt="${title}" loading="lazy" />
               <span class="public-gallery-badge">${icon} ${category}</span>
               <div class="public-gallery-hover-overlay">
                 <span class="hover-zoom-btn">🔍 Ver Montaje Completo</span>
@@ -409,7 +409,7 @@ async function initAnnouncementBar() {
 
   try {
     const data = await dbService.getAnnouncement();
-    if (!data || data.activo === false) {
+    if (!data || data.isActive === false || data.activo === false) {
       bar.style.display = "none";
       document.body.classList.add("no-announcement-bar");
       return;
@@ -426,19 +426,19 @@ async function initAnnouncementBar() {
     const subtextEl = document.getElementById("announcementSubtext");
     const rightGroup = document.getElementById("announcementRightGroup");
 
-    if (iconEl) iconEl.textContent = data.icono || "✨";
-    if (titleEl) titleEl.textContent = data.titulo || "";
-    if (msgEl) msgEl.textContent = data.mensaje || "";
+    if (iconEl) iconEl.textContent = data.icon || data.icono || "✨";
+    if (titleEl) titleEl.textContent = data.title || data.titulo || "";
+    if (msgEl) msgEl.textContent = data.message || data.mensaje || "";
     if (badgeEl) {
       badgeEl.textContent = data.badge || "";
       badgeEl.style.display = data.badge ? "inline-block" : "none";
     }
     if (subtextEl) {
-      subtextEl.textContent = data.subtexto || "";
-      subtextEl.style.display = data.subtexto ? "inline-block" : "none";
+      subtextEl.textContent = data.subtext || data.subtexto || "";
+      subtextEl.style.display = (data.subtext || data.subtexto) ? "inline-block" : "none";
     }
     if (dotEl) {
-      dotEl.style.display = (data.badge && data.subtexto) ? "inline" : "none";
+      dotEl.style.display = (data.badge && (data.subtext || data.subtexto)) ? "inline" : "none";
     }
     if (rightGroup) {
       rightGroup.style.display = (!data.badge && !data.subtexto) ? "none" : "";

@@ -972,9 +972,13 @@ if (galleryForm) {
       if (id) {
         // Edit mode
         await dbService.updateGalleryItem(id, {
+          title: titulo,
           titulo,
+          category: categoria,
           categoria,
+          description: descripcion,
           descripcion,
+          imageUrl: finalImage,
           imagen: finalImage
         });
 
@@ -988,9 +992,13 @@ if (galleryForm) {
       } else {
         // Create mode
         await dbService.addGalleryItem({
+          title: titulo,
           titulo,
+          category: categoria,
           categoria,
+          description: descripcion,
           descripcion,
+          imageUrl: finalImage,
           imagen: finalImage
         });
 

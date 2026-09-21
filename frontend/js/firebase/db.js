@@ -1,44 +1,298 @@
 /**
- * Servicio de Base de Datos para Banquetes Almar (Marinilla, Antioquia).
- * 
- * Conexión en vivo con Firebase Cloud Firestore (Proyecto: banquetes-almar).
- * Con arquitectura híbrida: escribe en Firestore y mantiene sincronización
- * local para velocidad instantánea y soporte offline.
+ * Database Service for Banquetes Almar (Marinilla, Antioquia).
+ * Standardized with 100% English collections, schema attributes, and queries.
+ * Live integration with Google Cloud Firestore & local cache synchronization.
  */
 
 import { firebaseConfig, isFirebaseConfigured } from "./config.js";
 import { ENV } from "./env.js";
 import { DEFAULT_ANNOUNCEMENT } from "../config/business-info.js";
 
-// Storage keys with configurable prefix from environment
+// Client local storage keys prefix
 const storagePrefix = ENV?.STORAGE_KEY_PREFIX || "almar_";
 const STORAGE_KEYS = {
-  PACKAGES: `${storagePrefix}paquetes`,
-  RENTAL: `${storagePrefix}mobiliario`,
-  QUOTES: `${storagePrefix}cotizaciones`,
-  RESERVATIONS: `${storagePrefix}reservas`,
-  EVENTS: `${storagePrefix}eventos`,
-  PAYMENTS: `${storagePrefix}pagos`,
-  CLIENTS: `${storagePrefix}clientes`,
-  GALLERY: `${storagePrefix}galeria`,
-  GALLERY_CATEGORIES: `${storagePrefix}galeria_categorias`,
-  SERVICES: `${storagePrefix}servicios`,
-  INVENTORY_CATEGORIES: `${storagePrefix}inventario_categorias`,
-  ANNOUNCEMENT: `${storagePrefix}anuncio_superior`
+  PACKAGES: `${storagePrefix}packages`,
+  INVENTORY: `${storagePrefix}inventory`,
+  QUOTES: `${storagePrefix}quotes`,
+  RESERVATIONS: `${storagePrefix}reservations`,
+  EVENTS: `${storagePrefix}events`,
+  PAYMENTS: `${storagePrefix}payments`,
+  CLIENTS: `${storagePrefix}clients`,
+  GALLERY: `${storagePrefix}gallery`,
+  GALLERY_CATEGORIES: `${storagePrefix}gallery_categories`,
+  SERVICES: `${storagePrefix}services`,
+  INVENTORY_CATEGORIES: `${storagePrefix}inventory_categories`,
+  ANNOUNCEMENT: `${storagePrefix}announcements`
 };
 
-// Initial store setup if local storage is empty
+// ----------------- ENTITY NORMALIZERS (ENGLISH CANONICAL SCHEMA) -----------------
+
+export function normalizePackage(raw) {
+  if (!raw) return null;
+  const pkg = {
+    id: String(raw.id || ""),
+    title: raw.title || raw.titulo || "",
+    category: raw.category || raw.categoria || "bodas",
+    badge: raw.badge || "",
+    description: raw.description || raw.descripcion || "",
+    pricePerPerson: Number(raw.pricePerPerson ?? raw.precioPorPersona ?? 0),
+    minGuests: Number(raw.minGuests ?? raw.minimoPersonas ?? 1),
+    imageUrl: raw.imageUrl || raw.imagen || "",
+    inclusions: Array.isArray(raw.inclusions) ? raw.inclusions : (Array.isArray(raw.inclusiones) ? raw.inclusiones : []),
+    createdAt: raw.createdAt || new Date().toISOString(),
+    updatedAt: raw.updatedAt || new Date().toISOString()
+  };
+  Object.defineProperty(pkg, "titulo", { get() { return this.title; }, set(v) { this.title = v; }, enumerable: false });
+  Object.defineProperty(pkg, "categoria", { get() { return this.category; }, set(v) { this.category = v; }, enumerable: false });
+  Object.defineProperty(pkg, "descripcion", { get() { return this.description; }, set(v) { this.description = v; }, enumerable: false });
+  Object.defineProperty(pkg, "precioPorPersona", { get() { return this.pricePerPerson; }, set(v) { this.pricePerPerson = v; }, enumerable: false });
+  Object.defineProperty(pkg, "minimoPersonas", { get() { return this.minGuests; }, set(v) { this.minGuests = v; }, enumerable: false });
+  Object.defineProperty(pkg, "imagen", { get() { return this.imageUrl; }, set(v) { this.imageUrl = v; }, enumerable: false });
+  Object.defineProperty(pkg, "inclusiones", { get() { return this.inclusions; }, set(v) { this.inclusions = v; }, enumerable: false });
+  return pkg;
+}
+
+export function normalizeInventoryItem(raw) {
+  if (!raw) return null;
+  const item = {
+    id: String(raw.id || ""),
+    name: raw.name || raw.nombre || "",
+    category: raw.category || raw.categoria || "sillas",
+    price: Number(raw.price ?? raw.precio ?? 0),
+    unit: raw.unit || raw.unidad || "día/evento",
+    stock: Number(raw.stock ?? raw.cantidad_total ?? 0),
+    imageUrl: raw.imageUrl || raw.imagen || "",
+    description: raw.description || raw.descripcion || "",
+    isActive: raw.isActive !== undefined ? Boolean(raw.isActive) : (raw.activo !== undefined ? Boolean(raw.activo) : true),
+    createdAt: raw.createdAt || new Date().toISOString(),
+    updatedAt: raw.updatedAt || new Date().toISOString()
+  };
+  Object.defineProperty(item, "nombre", { get() { return this.name; }, set(v) { this.name = v; }, enumerable: false });
+  Object.defineProperty(item, "categoria", { get() { return this.category; }, set(v) { this.category = v; }, enumerable: false });
+  Object.defineProperty(item, "precio", { get() { return this.price; }, set(v) { this.price = v; }, enumerable: false });
+  Object.defineProperty(item, "unidad", { get() { return this.unit; }, set(v) { this.unit = v; }, enumerable: false });
+  Object.defineProperty(item, "imagen", { get() { return this.imageUrl; }, set(v) { this.imageUrl = v; }, enumerable: false });
+  Object.defineProperty(item, "descripcion", { get() { return this.description; }, set(v) { this.description = v; }, enumerable: false });
+  return item;
+}
+
+export function normalizeQuote(raw) {
+  if (!raw) return null;
+  const quote = {
+    id: String(raw.id || ""),
+    clientName: raw.clientName || raw.nombre || "",
+    phone: raw.phone || raw.telefono || "",
+    email: raw.email || "",
+    eventType: raw.eventType || raw.evento || "Boda",
+    location: raw.location || raw.locacion || "",
+    guestCount: Number(raw.guestCount ?? raw.personas ?? raw.invitados ?? 50),
+    packageId: raw.packageId || raw.paqueteId || "",
+    estimatedTotal: Number(raw.estimatedTotal ?? raw.totalEstimado ?? 0),
+    suggestedDeposit: Number(raw.suggestedDeposit ?? raw.anticipoSugerido ?? 0),
+    message: raw.message || raw.mensaje || "",
+    status: raw.status || raw.estado || "Pending",
+    eventDate: raw.eventDate || raw.fechaEvento || raw.fecha_evento || "",
+    createdAt: raw.createdAt || new Date().toISOString(),
+    updatedAt: raw.updatedAt || new Date().toISOString()
+  };
+  Object.defineProperty(quote, "nombre", { get() { return this.clientName; }, set(v) { this.clientName = v; }, enumerable: false });
+  Object.defineProperty(quote, "telefono", { get() { return this.phone; }, set(v) { this.phone = v; }, enumerable: false });
+  Object.defineProperty(quote, "evento", { get() { return this.eventType; }, set(v) { this.eventType = v; }, enumerable: false });
+  Object.defineProperty(quote, "locacion", { get() { return this.location; }, set(v) { this.location = v; }, enumerable: false });
+  Object.defineProperty(quote, "personas", { get() { return this.guestCount; }, set(v) { this.guestCount = v; }, enumerable: false });
+  Object.defineProperty(quote, "totalEstimado", { get() { return this.estimatedTotal; }, set(v) { this.estimatedTotal = v; }, enumerable: false });
+  Object.defineProperty(quote, "anticipoSugerido", { get() { return this.suggestedDeposit; }, set(v) { this.suggestedDeposit = v; }, enumerable: false });
+  Object.defineProperty(quote, "mensaje", { get() { return this.message; }, set(v) { this.message = v; }, enumerable: false });
+  Object.defineProperty(quote, "estado", { get() { return this.status; }, set(v) { this.status = v; }, enumerable: false });
+  Object.defineProperty(quote, "fechaEvento", { get() { return this.eventDate; }, set(v) { this.eventDate = v; }, enumerable: false });
+  return quote;
+}
+
+export function normalizeReservation(raw) {
+  if (!raw) return null;
+  const res = {
+    id: String(raw.id || ""),
+    clientName: raw.clientName || raw.cliente || "",
+    phone: raw.phone || raw.telefono || "",
+    email: raw.email || "",
+    eventType: raw.eventType || raw.tipo_evento || raw.evento || "Boda",
+    guestCount: Number(raw.guestCount ?? raw.personas ?? raw.invitados ?? 50),
+    eventDate: raw.eventDate || raw.fecha_evento || raw.fechaEvento || "",
+    eventTime: raw.eventTime || raw.hora_evento || "16:00",
+    location: raw.location || raw.locacion || "",
+    totalAmount: Number(raw.totalAmount ?? raw.total ?? 0),
+    depositAmount: Number(raw.depositAmount ?? raw.anticipo ?? 0),
+    balanceAmount: Number(raw.balanceAmount ?? raw.saldo ?? 0),
+    status: raw.status || raw.estado || "Confirmed",
+    notes: raw.notes || raw.observaciones || "",
+    packageId: raw.packageId || raw.paqueteId || raw.paquete_id || "",
+    rentalItems: Array.isArray(raw.rentalItems) ? raw.rentalItems : (Array.isArray(raw.items_mobiliario) ? raw.items_mobiliario : []),
+    contractSigned: Boolean(raw.contractSigned ?? raw.contrato_firmado ?? false),
+    createdAt: raw.createdAt || new Date().toISOString(),
+    updatedAt: raw.updatedAt || new Date().toISOString()
+  };
+  Object.defineProperty(res, "cliente", { get() { return this.clientName; }, set(v) { this.clientName = v; }, enumerable: false });
+  Object.defineProperty(res, "telefono", { get() { return this.phone; }, set(v) { this.phone = v; }, enumerable: false });
+  Object.defineProperty(res, "tipo_evento", { get() { return this.eventType; }, set(v) { this.eventType = v; }, enumerable: false });
+  Object.defineProperty(res, "evento", { get() { return this.eventType; }, set(v) { this.eventType = v; }, enumerable: false });
+  Object.defineProperty(res, "personas", { get() { return this.guestCount; }, set(v) { this.guestCount = v; }, enumerable: false });
+  Object.defineProperty(res, "invitados", { get() { return this.guestCount; }, set(v) { this.guestCount = v; }, enumerable: false });
+  Object.defineProperty(res, "fecha_evento", { get() { return this.eventDate; }, set(v) { this.eventDate = v; }, enumerable: false });
+  Object.defineProperty(res, "hora_evento", { get() { return this.eventTime; }, set(v) { this.eventTime = v; }, enumerable: false });
+  Object.defineProperty(res, "locacion", { get() { return this.location; }, set(v) { this.location = v; }, enumerable: false });
+  Object.defineProperty(res, "total", { get() { return this.totalAmount; }, set(v) { this.totalAmount = v; }, enumerable: false });
+  Object.defineProperty(res, "anticipo", { get() { return this.depositAmount; }, set(v) { this.depositAmount = v; }, enumerable: false });
+  Object.defineProperty(res, "saldo", { get() { return this.balanceAmount; }, set(v) { this.balanceAmount = v; }, enumerable: false });
+  Object.defineProperty(res, "estado", { get() { return this.status; }, set(v) { this.status = v; }, enumerable: false });
+  Object.defineProperty(res, "observaciones", { get() { return this.notes; }, set(v) { this.notes = v; }, enumerable: false });
+  return res;
+}
+
+export function normalizePayment(raw) {
+  if (!raw) return null;
+  const pay = {
+    id: String(raw.id || ""),
+    reservationId: String(raw.reservationId || raw.reservaId || raw.reserva_id || ""),
+    clientName: raw.clientName || raw.cliente || "",
+    amount: Number(raw.amount ?? raw.monto ?? 0),
+    concept: raw.concept || raw.concepto || "Abono",
+    method: raw.method || raw.metodo || "Transferencia",
+    paymentDate: raw.paymentDate || raw.fecha || new Date().toISOString().split("T")[0],
+    reference: raw.reference || raw.referencia || "",
+    receiptUrl: raw.receiptUrl || raw.comprobanteUrl || "",
+    createdAt: raw.createdAt || new Date().toISOString()
+  };
+  Object.defineProperty(pay, "reservaId", { get() { return this.reservationId; }, set(v) { this.reservationId = v; }, enumerable: false });
+  Object.defineProperty(pay, "cliente", { get() { return this.clientName; }, set(v) { this.clientName = v; }, enumerable: false });
+  Object.defineProperty(pay, "monto", { get() { return this.amount; }, set(v) { this.amount = v; }, enumerable: false });
+  Object.defineProperty(pay, "concepto", { get() { return this.concept; }, set(v) { this.concept = v; }, enumerable: false });
+  Object.defineProperty(pay, "metodo", { get() { return this.method; }, set(v) { this.method = v; }, enumerable: false });
+  Object.defineProperty(pay, "fecha", { get() { return this.paymentDate; }, set(v) { this.paymentDate = v; }, enumerable: false });
+  Object.defineProperty(pay, "referencia", { get() { return this.reference; }, set(v) { this.reference = v; }, enumerable: false });
+  return pay;
+}
+
+export function normalizeGalleryItem(raw) {
+  if (!raw) return null;
+  const item = {
+    id: String(raw.id || ""),
+    title: raw.title || raw.titulo || "",
+    category: raw.category || raw.categoria || "Bodas",
+    imageUrl: raw.imageUrl || raw.imagen || "",
+    description: raw.description || raw.descripcion || "",
+    order: Number(raw.order ?? 0),
+    createdAt: raw.createdAt || new Date().toISOString()
+  };
+  Object.defineProperty(item, "titulo", { get() { return this.title; }, set(v) { this.title = v; }, enumerable: false });
+  Object.defineProperty(item, "categoria", { get() { return this.category; }, set(v) { this.category = v; }, enumerable: false });
+  Object.defineProperty(item, "imagen", { get() { return this.imageUrl; }, set(v) { this.imageUrl = v; }, enumerable: false });
+  Object.defineProperty(item, "descripcion", { get() { return this.description; }, set(v) { this.description = v; }, enumerable: false });
+  return item;
+}
+
+export function normalizeClient(raw) {
+  if (!raw) return null;
+  const c = {
+    id: String(raw.id || ""),
+    name: raw.name || raw.nombre || "",
+    phone: raw.phone || raw.telefono || "",
+    email: raw.email || "",
+    address: raw.address || raw.direccion || "",
+    city: raw.city || raw.ciudad || "Marinilla",
+    documentId: raw.documentId || raw.documento || "",
+    clientType: raw.clientType || raw.tipo_cliente || raw.tipo || "Cliente",
+    eventsCount: Number(raw.eventsCount ?? raw.totalEventos ?? 0),
+    totalBilled: Number(raw.totalBilled ?? raw.totalFacturado ?? 0),
+    notes: raw.notes || raw.notas || "",
+    createdAt: raw.createdAt || new Date().toISOString(),
+    updatedAt: raw.updatedAt || new Date().toISOString()
+  };
+  Object.defineProperty(c, "nombre", { get() { return this.name; }, set(v) { this.name = v; }, enumerable: false });
+  Object.defineProperty(c, "telefono", { get() { return this.phone; }, set(v) { this.phone = v; }, enumerable: false });
+  Object.defineProperty(c, "direccion", { get() { return this.address; }, set(v) { this.address = v; }, enumerable: false });
+  Object.defineProperty(c, "ciudad", { get() { return this.city; }, set(v) { this.city = v; }, enumerable: false });
+  Object.defineProperty(c, "documento", { get() { return this.documentId; }, set(v) { this.documentId = v; }, enumerable: false });
+  Object.defineProperty(c, "tipo_cliente", { get() { return this.clientType; }, set(v) { this.clientType = v; }, enumerable: false });
+  Object.defineProperty(c, "totalEventos", { get() { return this.eventsCount; }, set(v) { this.eventsCount = v; }, enumerable: false });
+  Object.defineProperty(c, "totalFacturado", { get() { return this.totalBilled; }, set(v) { this.totalBilled = v; }, enumerable: false });
+  return c;
+}
+
+export function normalizeService(raw) {
+  if (!raw) return null;
+  const s = {
+    id: String(raw.id || ""),
+    name: raw.name || raw.nombre || "",
+    category: raw.category || raw.categoria || "Producción",
+    price: Number(raw.price ?? raw.precio ?? 0),
+    description: raw.description || raw.descripcion || "",
+    inclusions: Array.isArray(raw.inclusions) ? raw.inclusions : (Array.isArray(raw.inclusiones) ? raw.inclusiones : []),
+    imageUrl: raw.imageUrl || raw.imagen || "",
+    createdAt: raw.createdAt || new Date().toISOString(),
+    updatedAt: raw.updatedAt || new Date().toISOString()
+  };
+  Object.defineProperty(s, "nombre", { get() { return this.name; }, set(v) { this.name = v; }, enumerable: false });
+  Object.defineProperty(s, "categoria", { get() { return this.category; }, set(v) { this.category = v; }, enumerable: false });
+  Object.defineProperty(s, "precio", { get() { return this.price; }, set(v) { this.price = v; }, enumerable: false });
+  Object.defineProperty(s, "descripcion", { get() { return this.description; }, set(v) { this.description = v; }, enumerable: false });
+  Object.defineProperty(s, "inclusiones", { get() { return this.inclusions; }, set(v) { this.inclusions = v; }, enumerable: false });
+  Object.defineProperty(s, "imagen", { get() { return this.imageUrl; }, set(v) { this.imageUrl = v; }, enumerable: false });
+  return s;
+}
+
+export function normalizeAnnouncement(raw) {
+  if (!raw) return null;
+  const a = {
+    id: String(raw.id || "top_banner"),
+    isActive: raw.isActive !== undefined ? Boolean(raw.isActive) : (raw.activo !== undefined ? Boolean(raw.activo) : true),
+    icon: raw.icon || raw.icono || "✨",
+    title: raw.title || raw.titulo || "",
+    message: raw.message || raw.mensaje || "",
+    badge: raw.badge || "Oriente Antioqueño",
+    subtext: raw.subtext || raw.subtexto || "",
+    updatedAt: raw.updatedAt || new Date().toISOString()
+  };
+  Object.defineProperty(a, "activo", { get() { return this.isActive; }, set(v) { this.isActive = v; }, enumerable: false });
+  Object.defineProperty(a, "icono", { get() { return this.icon; }, set(v) { this.icon = v; }, enumerable: false });
+  Object.defineProperty(a, "titulo", { get() { return this.title; }, set(v) { this.title = v; }, enumerable: false });
+  Object.defineProperty(a, "mensaje", { get() { return this.message; }, set(v) { this.message = v; }, enumerable: false });
+  Object.defineProperty(a, "subtexto", { get() { return this.subtext; }, set(v) { this.subtext = v; }, enumerable: false });
+  return a;
+}
+
+// ----------------- LOCAL STORAGE HELPERS -----------------
+
+function getLocal(key) {
+  if (typeof localStorage === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    console.warn(`Local store error for key ${key}:`, e);
+    return [];
+  }
+}
+
+function setLocal(key, value) {
+  if (typeof localStorage === "undefined") return;
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {
+    console.warn(`Local store write error for key ${key}:`, e);
+  }
+}
+
 function initLocalStore() {
   if (typeof localStorage === "undefined") return;
 
   if (!localStorage.getItem(STORAGE_KEYS.PACKAGES)) {
     localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify([]));
   }
-  if (!localStorage.getItem(STORAGE_KEYS.RENTAL)) {
-    localStorage.setItem(STORAGE_KEYS.RENTAL, JSON.stringify([]));
+  if (!localStorage.getItem(STORAGE_KEYS.INVENTORY)) {
+    localStorage.setItem(STORAGE_KEYS.INVENTORY, JSON.stringify([]));
   }
   if (!localStorage.getItem(STORAGE_KEYS.ANNOUNCEMENT)) {
-    localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENT, JSON.stringify(DEFAULT_ANNOUNCEMENT));
+    localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENT, JSON.stringify(normalizeAnnouncement(DEFAULT_ANNOUNCEMENT)));
   }
   if (!localStorage.getItem(STORAGE_KEYS.QUOTES)) {
     localStorage.setItem(STORAGE_KEYS.QUOTES, JSON.stringify([]));
@@ -49,9 +303,8 @@ function initLocalStore() {
   if (!localStorage.getItem(STORAGE_KEYS.PAYMENTS)) {
     localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify([]));
   }
-  }
   if (!localStorage.getItem(STORAGE_KEYS.GALLERY_CATEGORIES)) {
-    const initialCategories = [
+    const categories = [
       "Bodas",
       "15 Años",
       "Salón Marinilla",
@@ -60,235 +313,76 @@ function initLocalStore() {
       "Catering",
       "Eventos Corporativos"
     ];
-    localStorage.setItem(STORAGE_KEYS.GALLERY_CATEGORIES, JSON.stringify(initialCategories));
+    localStorage.setItem(STORAGE_KEYS.GALLERY_CATEGORIES, JSON.stringify(categories));
   }
   if (!localStorage.getItem(STORAGE_KEYS.GALLERY)) {
-    const initialGallery = [
-      {
-        id: "gal-1",
-        titulo: "Boda Romántica en Salón Almar",
-        categoria: "Bodas",
-        imagen: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80",
-        descripcion: "Montaje de gala con centros florales altos e iluminación cálida."
-      },
-      {
-        id: "gal-2",
-        titulo: "Ceremonia Campestre en El Peñol",
-        categoria: "Finca El Peñol",
-        imagen: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=1200&q=80",
-        descripcion: "Jardines campestres frente a la represa y quiosco iluminado."
-      },
-      {
-        id: "gal-3",
-        titulo: "Quince Años de Ensueño",
-        categoria: "15 Años",
-        imagen: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1200&q=80",
-        descripcion: "Efectos especiales, pista LED y backing floral."
-      },
-      {
-        id: "gal-4",
-        titulo: "Cena de Gala y Alta Cocina",
-        categoria: "Catering",
-        imagen: "https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=1200&q=80",
-        descripcion: "Servicio gourmet a 3 tiempos con emplatado de autor."
-      },
-      {
-        id: "gal-5",
-        titulo: "Montaje Tiffany y Salas Lounge",
-        categoria: "Mobiliario",
-        imagen: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=1200&q=80",
-        descripcion: "Silletería dorada y mobiliario de alquiler de alta gama."
-      },
-      {
-        id: "gal-6",
-        titulo: "Gran Salón de Gala Marinilla",
-        categoria: "Salón Marinilla",
-        imagen: "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=1200&q=80",
-        descripcion: "Capacidad para 200 personas con acústica profesional y chandeliers."
-      },
-      {
-        id: "gal-7",
-        titulo: "Estación de Cóctel & Pasabocas",
-        categoria: "Catering",
-        imagen: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80",
-        descripcion: "Recepción de bienvenida con bocados gourmet y coctelería."
-      },
-      {
-        id: "gal-8",
-        titulo: "Mesa Dulce & Repostería Fina",
-        categoria: "Catering",
-        imagen: "https://images.unsplash.com/photo-1535141192574-5d4897c13136?auto=format&fit=crop&w=1200&q=80",
-        descripcion: "Postres de bocado, macarons, shots dulces y torta ceremonial."
-      }
-    ];
-    localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(initialGallery));
-  }
-
-  if (!localStorage.getItem(STORAGE_KEYS.CLIENTS)) {
-    const initialClients = [
-      {
-        id: "cli-101",
-        nombre: "Mariana Gómez",
-        telefono: "3145678901",
-        email: "mariana.gomez@gmail.com",
-        documento: "1038412991",
-        direccion: "Calle 30 # 29-15, Marinilla",
-        tipo_cliente: "Cliente",
-        createdAt: new Date(Date.now() - 86400000 * 5).toISOString()
-      },
-      {
-        id: "cli-102",
-        nombre: "Carlos Andrés Restrepo",
-        telefono: "3104523311",
-        email: "carlos.restrepo@outlook.com",
-        documento: "1038554210",
-        direccion: "Sector La Dalia, El Peñol",
-        tipo_cliente: "VIP",
-        createdAt: new Date(Date.now() - 86400000 * 2).toISOString()
-      },
-      {
-        id: "cli-103",
-        nombre: "Valentina Muñoz",
-        telefono: "3117892233",
-        email: "valen.munoz@yahoo.es",
-        documento: "1040112845",
-        direccion: "Carrera 31 # 27-10, Rionegro",
-        tipo_cliente: "Empresarial",
-        createdAt: new Date().toISOString()
-      }
-    ];
-    localStorage.setItem(STORAGE_KEYS.CLIENTS, JSON.stringify(initialClients));
-  }
-
-  if (!localStorage.getItem(STORAGE_KEYS.SERVICES)) {
-    const initialServices = [
-      {
-        id: "srv-1",
-        titulo: "Banquetería y Catering de Gala",
-        categoria: "Catering",
-        imagen: "https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=1200&q=80",
-        descripcion: "Menús gourmet a 3 tiempos, pasabocas de bienvenida, repostería fina, vajilla de lujo y personal de protocolo para bodas y 15 años.",
-        destacado: true
-      },
-      {
-        id: "srv-2",
-        titulo: "Decoración y Ambientación Floral de Autor",
-        categoria: "Decoración",
-        imagen: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80",
-        descripcion: "Centros de mesa altos con flores naturales, arcos ceremoniales, backing de neón para fotos y ambientación de velas.",
-        destacado: true
-      },
-      {
-        id: "srv-3",
-        titulo: "Alquiler de Mobiliario y Menaje de Gala",
-        categoria: "Mobiliario",
-        imagen: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=1200&q=80",
-        descripcion: "Sillas Tiffany doradas, Phoenix, Crossback de madera, salas lounge, mantelería de alta costura y cristalería fina.",
-        destacado: true
-      },
-      {
-        id: "srv-4",
-        titulo: "Salón de Gala en Marinilla",
-        categoria: "Locación",
-        imagen: "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=1200&q=80",
-        descripcion: "Espacio climatizado para hasta 200 personas con acústica profesional, suite para anfitriones y ubicación estratégica en Marinilla.",
-        destacado: true
-      },
-      {
-        id: "srv-5",
-        titulo: "Finca Campestre El Peñol",
-        categoria: "Locación",
-        imagen: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=1200&q=80",
-        descripcion: "Exclusivo entorno campestre con vista a la represa, amplias zonas verdes, quiosco para ceremonias y parqueadero privado.",
-        destacado: true
-      },
-      {
-        id: "srv-6",
-        titulo: "Producción Audiovisual, Luces & DJ",
-        categoria: "Producción",
-        imagen: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1200&q=80",
-        descripcion: "Estructuras truss, cabezas móviles, pista de baile LED, chisperos fríos sin pólvora y DJ animador profesional.",
-        destacado: true
-      }
-    ];
-    localStorage.setItem(STORAGE_KEYS.SERVICES, JSON.stringify(initialServices));
-  }
-
-  if (!localStorage.getItem(STORAGE_KEYS.INVENTORY_CATEGORIES)) {
-    const defaultInvCategories = ["Sillas", "Mesas", "Carpas", "Menaje", "Mantelería", "Lounge"];
-    localStorage.setItem(STORAGE_KEYS.INVENTORY_CATEGORIES, JSON.stringify(defaultInvCategories));
+    localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify([]));
   }
 }
 
-initLocalStore();
-
-function getLocal(key) {
-  try {
-    return JSON.parse(localStorage.getItem(key)) || [];
-  } catch (e) {
-    return [];
-  }
+if (typeof window !== "undefined") {
+  initLocalStore();
 }
 
-function setLocal(key, data) {
-  try {
-    localStorage.setItem(key, JSON.stringify(data));
-  } catch (e) {}
-}
+// ----------------- FIRESTORE INITIALIZATION -----------------
 
-// ----------------- CLIENTE CLOUD FIRESTORE EN TIEMPO REAL -----------------
-let firestoreDb = null;
+let firestoreInstance = null;
 let firestoreOps = null;
+let firestoreInitPromise = null;
 
 async function initFirestoreLive() {
   if (typeof window === "undefined" || !isFirebaseConfigured()) return null;
-  if (firestoreDb) return { db: firestoreDb, ops: firestoreOps };
+  if (firestoreInstance && firestoreOps) return { db: firestoreInstance, ops: firestoreOps };
+  if (firestoreInitPromise) return firestoreInitPromise;
 
-  try {
-    const { initializeApp, getApps } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
-    const ops = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-    firestoreDb = ops.getFirestore(app);
-    firestoreOps = ops;
-    console.log("🔥 Firebase Cloud Firestore Conectado en Vivo (Proyecto: banquetes-almar)");
-    return { db: firestoreDb, ops: firestoreOps };
-  } catch (error) {
-    console.warn("⚠️ Firebase Live inicialización (usando fallback local):", error.message);
-    return null;
-  }
+  firestoreInitPromise = (async () => {
+    try {
+      const { initializeApp, getApps } = await import(
+        "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"
+      );
+      const ops = await import(
+        "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
+      );
+      const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+      firestoreInstance = ops.getFirestore(app);
+      firestoreOps = ops;
+      return { db: firestoreInstance, ops: firestoreOps };
+    } catch (err) {
+      console.warn("Firestore live initialization notice:", err.message);
+      return null;
+    }
+  })();
+
+  return firestoreInitPromise;
 }
 
-// Inicializar en segundo plano sin bloquear
 if (typeof window !== "undefined") {
   initFirestoreLive();
 }
 
-// ----------------- API DEL SERVICIO DE BASE DE DATOS -----------------
+// ----------------- DATABASE SERVICE PUBLIC API -----------------
 
 export const dbService = {
-  // PAQUETES TODO INCLUIDO
+  // PACKAGES
   async getPackages() {
     const live = await initFirestoreLive();
     if (live) {
       try {
         const { db, ops } = live;
-        const snapshot = await ops.getDocs(ops.collection(db, "paquetes"));
+        const snapshot = await ops.getDocs(ops.collection(db, "packages"));
         if (!snapshot.empty) {
           const remoteItems = [];
-          snapshot.forEach(doc => remoteItems.push({ id: doc.id, ...doc.data() }));
+          snapshot.forEach(doc => remoteItems.push(normalizePackage({ id: doc.id, ...doc.data() })));
           setLocal(STORAGE_KEYS.PACKAGES, remoteItems);
           return remoteItems;
         }
       } catch (err) {
-        console.warn("Firestore getPackages lectura:", err.message);
+        console.warn("Firestore getPackages error:", err.message);
       }
     }
     let localItems = getLocal(STORAGE_KEYS.PACKAGES);
-    if (!Array.isArray(localItems)) {
-      localItems = [];
-      setLocal(STORAGE_KEYS.PACKAGES, localItems);
-    }
-    return localItems;
+    if (!Array.isArray(localItems)) localItems = [];
+    return localItems.map(item => normalizePackage(item));
   },
 
   async getPackageById(id) {
@@ -296,45 +390,46 @@ export const dbService = {
     return list.find(p => String(p.id) === String(id)) || null;
   },
 
-  async addPackage(pkg) {
-    const newPkg = {
-      ...pkg,
+  async addPackage(pkgData) {
+    const clean = normalizePackage({
+      ...pkgData,
+      id: pkgData.id || ("pkg-" + Date.now()),
       createdAt: new Date().toISOString()
-    };
+    });
+
     const live = await initFirestoreLive();
     if (live) {
       try {
         const { db, ops } = live;
-        const docRef = await ops.addDoc(ops.collection(db, "paquetes"), newPkg);
-        newPkg.id = docRef.id;
+        await ops.setDoc(ops.doc(db, "packages", clean.id), clean, { merge: true });
       } catch (err) {
         console.warn("Firestore addPackage error:", err.message);
-        newPkg.id = "pkg-" + Date.now();
       }
-    } else {
-      newPkg.id = "pkg-" + Date.now();
     }
+
     const list = getLocal(STORAGE_KEYS.PACKAGES) || [];
-    list.push(newPkg);
+    list.unshift(clean);
     setLocal(STORAGE_KEYS.PACKAGES, list);
-    return newPkg;
+    return clean;
   },
 
   async updatePackage(id, pkgData) {
+    const clean = normalizePackage({ ...pkgData, id, updatedAt: new Date().toISOString() });
     const live = await initFirestoreLive();
     if (live) {
       try {
         const { db, ops } = live;
-        const docRef = ops.doc(db, "paquetes", id);
-        await ops.updateDoc(docRef, { ...pkgData, updatedAt: new Date().toISOString() });
+        const docRef = ops.doc(db, "packages", String(id));
+        await ops.setDoc(docRef, clean, { merge: true });
       } catch (err) {
         console.warn("Firestore updatePackage error:", err.message);
       }
     }
+
     const list = getLocal(STORAGE_KEYS.PACKAGES) || [];
     const idx = list.findIndex(p => String(p.id) === String(id));
     if (idx !== -1) {
-      list[idx] = { ...list[idx], ...pkgData, updatedAt: new Date().toISOString() };
+      list[idx] = clean;
       setLocal(STORAGE_KEYS.PACKAGES, list);
     }
     return true;
@@ -345,11 +440,12 @@ export const dbService = {
     if (live) {
       try {
         const { db, ops } = live;
-        await ops.deleteDoc(ops.doc(db, "paquetes", id));
+        await ops.deleteDoc(ops.doc(db, "packages", String(id)));
       } catch (err) {
         console.warn("Firestore deletePackage error:", err.message);
       }
     }
+
     let list = getLocal(STORAGE_KEYS.PACKAGES) || [];
     list = list.filter(p => String(p.id) !== String(id));
     setLocal(STORAGE_KEYS.PACKAGES, list);
@@ -361,29 +457,35 @@ export const dbService = {
     return [];
   },
 
-  // MOBILIARIO / ALQUILER
+  // INVENTORY / RENTAL ITEMS
   async getRentalItems(category = "todos") {
-    let list = getLocal(STORAGE_KEYS.RENTAL);
-    if (Array.isArray(list)) {
-      let modified = false;
-      list = list.map(item => {
-        if (item.id === "silla-tiffany-dorada" && item.imagen && item.imagen.includes("photo-1503602642458-232111445657")) {
-          modified = true;
-          return { ...item, imagen: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=800&q=80" };
+    const live = await initFirestoreLive();
+    if (live) {
+      try {
+        const { db, ops } = live;
+        const snapshot = await ops.getDocs(ops.collection(db, "inventory"));
+        if (!snapshot.empty) {
+          const remoteItems = [];
+          snapshot.forEach(doc => remoteItems.push(normalizeInventoryItem({ id: doc.id, ...doc.data() })));
+          setLocal(STORAGE_KEYS.INVENTORY, remoteItems);
+          if (!category || category === "todos") return remoteItems;
+          return remoteItems.filter(item => (item.category || "").toLowerCase() === category.toLowerCase());
         }
-        return item;
-      });
-      if (modified) {
-        setLocal(STORAGE_KEYS.RENTAL, list);
+      } catch (err) {
+        console.warn("Firestore getRentalItems error:", err.message);
       }
     }
+
+    let list = getLocal(STORAGE_KEYS.INVENTORY);
+    if (!Array.isArray(list)) list = [];
+    list = list.map(item => normalizeInventoryItem(item));
     if (!category || category === "todos") return list;
-    return list.filter(item => item.categoria.toLowerCase() === category.toLowerCase());
+    return list.filter(item => (item.category || "").toLowerCase() === category.toLowerCase());
   },
 
   async getRentalItemById(id) {
-    const list = getLocal(STORAGE_KEYS.RENTAL);
-    return list.find(item => item.id === id) || null;
+    const list = await this.getRentalItems();
+    return list.find(item => String(item.id) === String(id)) || null;
   },
 
   async getInventoryCategories() {
@@ -406,156 +508,179 @@ export const dbService = {
   },
 
   async saveRentalItem(itemData) {
-    let items = await this.getRentalItems();
-    if (itemData.id) {
-      const idx = items.findIndex(i => String(i.id) === String(itemData.id));
-      if (idx !== -1) {
-        items[idx] = { ...items[idx], ...itemData, updatedAt: new Date().toISOString() };
-      } else {
-        items.unshift({ ...itemData, id: itemData.id || ("mob-" + Date.now()), createdAt: new Date().toISOString() });
-      }
-    } else {
-      itemData.id = "mob-" + Date.now();
-      itemData.createdAt = new Date().toISOString();
-      items.unshift(itemData);
-    }
-    setLocal(STORAGE_KEYS.RENTAL, items);
-    return itemData;
-  },
+    const clean = normalizeInventoryItem({
+      ...itemData,
+      id: itemData.id || ("mob-" + Date.now()),
+      createdAt: itemData.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
 
-  async deleteRentalItem(id) {
-    let items = await this.getRentalItems();
-    items = items.filter(i => String(i.id) !== String(id));
-    setLocal(STORAGE_KEYS.RENTAL, items);
-    return true;
-  },
-
-  // COTIZACIONES
-  async getQuotes() {
-    // 1. Intentar cargar desde Firestore en la nube si está activo
     const live = await initFirestoreLive();
     if (live) {
       try {
         const { db, ops } = live;
-        const q = ops.query(ops.collection(db, "cotizaciones"), ops.orderBy("createdAt", "desc"));
+        await ops.setDoc(ops.doc(db, "inventory", clean.id), clean, { merge: true });
+      } catch (err) {
+        console.warn("Firestore saveRentalItem error:", err.message);
+      }
+    }
+
+    let items = getLocal(STORAGE_KEYS.INVENTORY) || [];
+    const idx = items.findIndex(i => String(i.id) === String(clean.id));
+    if (idx !== -1) {
+      items[idx] = clean;
+    } else {
+      items.unshift(clean);
+    }
+    setLocal(STORAGE_KEYS.INVENTORY, items);
+    return clean;
+  },
+
+  async deleteRentalItem(id) {
+    const live = await initFirestoreLive();
+    if (live) {
+      try {
+        const { db, ops } = live;
+        await ops.deleteDoc(ops.doc(db, "inventory", String(id)));
+      } catch (err) {
+        console.warn("Firestore deleteRentalItem error:", err.message);
+      }
+    }
+
+    let items = getLocal(STORAGE_KEYS.INVENTORY) || [];
+    items = items.filter(i => String(i.id) !== String(id));
+    setLocal(STORAGE_KEYS.INVENTORY, items);
+    return true;
+  },
+
+  // QUOTES
+  async getQuotes() {
+    const live = await initFirestoreLive();
+    if (live) {
+      try {
+        const { db, ops } = live;
+        const q = ops.query(ops.collection(db, "quotes"), ops.orderBy("createdAt", "desc"));
         const snapshot = await ops.getDocs(q);
         if (!snapshot.empty) {
           const remoteQuotes = [];
           snapshot.forEach(doc => {
-            remoteQuotes.push({ id: doc.id, ...doc.data() });
+            remoteQuotes.push(normalizeQuote({ id: doc.id, ...doc.data() }));
           });
-          // Actualizar caché local
           setLocal(STORAGE_KEYS.QUOTES, remoteQuotes);
           return remoteQuotes;
         }
       } catch (err) {
-        console.warn("Firestore getQuotes lectura:", err.message);
+        console.warn("Firestore getQuotes error:", err.message);
       }
     }
-    return getLocal(STORAGE_KEYS.QUOTES).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    let quotes = getLocal(STORAGE_KEYS.QUOTES) || [];
+    return quotes.map(q => normalizeQuote(q)).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   },
 
   async createQuote(quoteData) {
-    const newQuote = {
+    const clean = normalizeQuote({
       ...quoteData,
-      estado: quoteData.estado || "Pendiente",
+      id: quoteData.id || ("cot-" + Date.now()),
+      status: quoteData.status || quoteData.estado || "Pending",
       createdAt: new Date().toISOString()
-    };
+    });
 
-    // 1. Guardar en Firestore en la nube
     const live = await initFirestoreLive();
     if (live) {
       try {
         const { db, ops } = live;
-        const docRef = await ops.addDoc(ops.collection(db, "cotizaciones"), newQuote);
-        newQuote.id = docRef.id;
+        await ops.setDoc(ops.doc(db, "quotes", clean.id), clean, { merge: true });
       } catch (err) {
-        console.warn("Firestore createQuote escritura:", err.message);
-        newQuote.id = "cot-" + Date.now();
+        console.warn("Firestore createQuote error:", err.message);
       }
-    } else {
-      newQuote.id = "cot-" + Date.now();
     }
 
-    // 2. Guardar en local para inmediatez
-    const quotes = getLocal(STORAGE_KEYS.QUOTES);
-    quotes.unshift(newQuote);
+    const quotes = getLocal(STORAGE_KEYS.QUOTES) || [];
+    quotes.unshift(clean);
     setLocal(STORAGE_KEYS.QUOTES, quotes);
-
-    return newQuote;
+    return clean;
   },
 
-  async updateQuoteStatus(id, estado) {
+  async updateQuoteStatus(id, status) {
     const live = await initFirestoreLive();
-    if (live && !id.startsWith("cot-")) {
+    if (live) {
       try {
         const { db, ops } = live;
-        await ops.updateDoc(ops.doc(db, "cotizaciones", id), { estado });
+        await ops.updateDoc(ops.doc(db, "quotes", String(id)), {
+          status: status,
+          updatedAt: new Date().toISOString()
+        });
       } catch (e) {}
     }
 
-    const quotes = getLocal(STORAGE_KEYS.QUOTES);
-    const idx = quotes.findIndex(q => q.id === id);
+    const quotes = getLocal(STORAGE_KEYS.QUOTES) || [];
+    const idx = quotes.findIndex(q => String(q.id) === String(id));
     if (idx !== -1) {
-      quotes[idx].estado = estado;
+      quotes[idx].status = status;
       setLocal(STORAGE_KEYS.QUOTES, quotes);
       return quotes[idx];
     }
-    return { id, estado };
+    return { id, status };
   },
 
   async updateQuote(id, quoteData) {
+    const clean = normalizeQuote({ ...quoteData, id, updatedAt: new Date().toISOString() });
     const live = await initFirestoreLive();
-    if (live && !String(id).startsWith("cot-")) {
+    if (live) {
       try {
         const { db, ops } = live;
-        await ops.updateDoc(ops.doc(db, "cotizaciones", String(id)), quoteData);
+        await ops.setDoc(ops.doc(db, "quotes", String(id)), clean, { merge: true });
       } catch (e) {
-        console.warn("Firestore updateQuote:", e.message);
+        console.warn("Firestore updateQuote error:", e.message);
       }
     }
 
-    const quotes = getLocal(STORAGE_KEYS.QUOTES);
+    const quotes = getLocal(STORAGE_KEYS.QUOTES) || [];
     const idx = quotes.findIndex(q => String(q.id) === String(id));
     if (idx !== -1) {
-      quotes[idx] = { ...quotes[idx], ...quoteData };
+      quotes[idx] = clean;
       setLocal(STORAGE_KEYS.QUOTES, quotes);
       return quotes[idx];
     }
-    return { id, ...quoteData };
+    return clean;
   },
 
   async deleteQuote(id) {
     const live = await initFirestoreLive();
-    if (live && !id.startsWith("cot-")) {
+    if (live) {
       try {
         const { db, ops } = live;
-        await ops.deleteDoc(ops.doc(db, "cotizaciones", id));
+        await ops.deleteDoc(ops.doc(db, "quotes", String(id)));
       } catch (e) {}
     }
 
-    let quotes = getLocal(STORAGE_KEYS.QUOTES);
-    quotes = quotes.filter(q => q.id !== id);
+    let quotes = getLocal(STORAGE_KEYS.QUOTES) || [];
+    quotes = quotes.filter(q => String(q.id) !== String(id));
     setLocal(STORAGE_KEYS.QUOTES, quotes);
     return true;
   },
 
-  // RESERVAS
+  // RESERVATIONS
   async getReservations() {
     const live = await initFirestoreLive();
     if (live) {
       try {
         const { db, ops } = live;
-        const snapshot = await ops.getDocs(ops.collection(db, "reservas"));
+        const snapshot = await ops.getDocs(ops.collection(db, "reservations"));
         if (!snapshot.empty) {
-          const remoteReservas = [];
-          snapshot.forEach(doc => remoteReservas.push({ id: doc.id, ...doc.data() }));
-          setLocal(STORAGE_KEYS.RESERVATIONS, remoteReservas);
-          return remoteReservas;
+          const remoteReservations = [];
+          snapshot.forEach(doc => remoteReservations.push(normalizeReservation({ id: doc.id, ...doc.data() })));
+          setLocal(STORAGE_KEYS.RESERVATIONS, remoteReservations);
+          return remoteReservations;
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn("Firestore getReservations error:", e.message);
+      }
     }
-    return getLocal(STORAGE_KEYS.RESERVATIONS).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    let reservations = getLocal(STORAGE_KEYS.RESERVATIONS) || [];
+    return reservations.map(r => normalizeReservation(r)).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   },
 
   async getReservationById(id) {
@@ -563,92 +688,94 @@ export const dbService = {
     if (live) {
       try {
         const { db, ops } = live;
-        const docRef = ops.doc(db, "reservas", String(id));
+        const docRef = ops.doc(db, "reservations", String(id));
         const docSnap = await ops.getDoc(docRef);
         if (docSnap.exists()) {
-          return { id: docSnap.id, ...docSnap.data() };
+          return normalizeReservation({ id: docSnap.id, ...docSnap.data() });
         }
       } catch (e) {
         console.warn("Firestore getReservationById error:", e.message);
       }
     }
-    const reservas = getLocal(STORAGE_KEYS.RESERVATIONS) || [];
-    return reservas.find(r => String(r.id) === String(id)) || null;
+
+    const reservations = getLocal(STORAGE_KEYS.RESERVATIONS) || [];
+    const item = reservations.find(r => String(r.id) === String(id));
+    return item ? normalizeReservation(item) : null;
   },
 
-  async createReservation(reservaData) {
-    const newReserva = {
-      ...reservaData,
-      estado: reservaData.estado || "Confirmada",
+  async createReservation(reservationData) {
+    const clean = normalizeReservation({
+      ...reservationData,
+      id: reservationData.id || ("res-" + Date.now()),
+      status: reservationData.status || reservationData.estado || "Confirmed",
       createdAt: new Date().toISOString()
-    };
+    });
 
     const live = await initFirestoreLive();
     if (live) {
       try {
         const { db, ops } = live;
-        const docRef = await ops.addDoc(ops.collection(db, "reservas"), newReserva);
-        newReserva.id = docRef.id;
+        await ops.setDoc(ops.doc(db, "reservations", clean.id), clean, { merge: true });
       } catch (e) {
-        newReserva.id = "res-" + Date.now();
+        console.warn("Firestore createReservation error:", e.message);
       }
-    } else {
-      newReserva.id = "res-" + Date.now();
     }
 
-    const reservas = getLocal(STORAGE_KEYS.RESERVATIONS);
-    reservas.unshift(newReserva);
-    setLocal(STORAGE_KEYS.RESERVATIONS, reservas);
-    return newReserva;
+    const reservations = getLocal(STORAGE_KEYS.RESERVATIONS) || [];
+    reservations.unshift(clean);
+    setLocal(STORAGE_KEYS.RESERVATIONS, reservations);
+    return clean;
   },
 
   async updateReservation(id, updatedData) {
+    const clean = normalizeReservation({ ...updatedData, id, updatedAt: new Date().toISOString() });
     const live = await initFirestoreLive();
-    if (live && !String(id).startsWith("res-")) {
+    if (live) {
       try {
         const { db, ops } = live;
-        await ops.updateDoc(ops.doc(db, "reservas", String(id)), updatedData);
+        await ops.setDoc(ops.doc(db, "reservations", String(id)), clean, { merge: true });
       } catch (e) {
         console.warn("Firestore updateReservation error:", e.message);
       }
     }
 
-    const reservas = getLocal(STORAGE_KEYS.RESERVATIONS);
-    const idx = reservas.findIndex(r => String(r.id) === String(id));
+    const reservations = getLocal(STORAGE_KEYS.RESERVATIONS) || [];
+    const idx = reservations.findIndex(r => String(r.id) === String(id));
     if (idx !== -1) {
-      reservas[idx] = { ...reservas[idx], ...updatedData };
-      setLocal(STORAGE_KEYS.RESERVATIONS, reservas);
-      return reservas[idx];
+      reservations[idx] = clean;
+      setLocal(STORAGE_KEYS.RESERVATIONS, reservations);
+      return reservations[idx];
     }
-    return { id, ...updatedData };
+    return clean;
   },
 
   async deleteReservation(id) {
     const live = await initFirestoreLive();
-    if (live && !String(id).startsWith("res-")) {
+    if (live) {
       try {
         const { db, ops } = live;
-        await ops.deleteDoc(ops.doc(db, "reservas", String(id)));
+        await ops.deleteDoc(ops.doc(db, "reservations", String(id)));
       } catch (e) {
         console.warn("Firestore deleteReservation error:", e.message);
       }
     }
-    let reservas = getLocal(STORAGE_KEYS.RESERVATIONS);
-    reservas = reservas.filter(r => r.id !== id);
-    setLocal(STORAGE_KEYS.RESERVATIONS, reservas);
+
+    let reservations = getLocal(STORAGE_KEYS.RESERVATIONS) || [];
+    reservations = reservations.filter(r => String(r.id) !== String(id));
+    setLocal(STORAGE_KEYS.RESERVATIONS, reservations);
     return true;
   },
 
-  // PAGOS Y ABONOS
+  // PAYMENTS
   async getPayments() {
     const live = await initFirestoreLive();
     if (live) {
       try {
         const { db, ops } = live;
-        const snapshot = await ops.getDocs(ops.collection(db, "pagos"));
+        const snapshot = await ops.getDocs(ops.collection(db, "payments"));
         if (!snapshot.empty) {
           const remotePayments = [];
-          snapshot.forEach(doc => remotePayments.push({ id: doc.id, ...doc.data() }));
+          snapshot.forEach(doc => remotePayments.push(normalizePayment({ id: doc.id, ...doc.data() })));
           setLocal(STORAGE_KEYS.PAYMENTS, remotePayments);
           return remotePayments;
         }
@@ -656,47 +783,47 @@ export const dbService = {
         console.warn("Firestore getPayments error:", e.message);
       }
     }
-    return getLocal(STORAGE_KEYS.PAYMENTS) || [];
+
+    let payments = getLocal(STORAGE_KEYS.PAYMENTS) || [];
+    return payments.map(p => normalizePayment(p));
   },
 
   async createPayment(paymentData) {
-    const newPayment = {
-      id: "pay-" + Date.now(),
+    const clean = normalizePayment({
       ...paymentData,
-      fecha: paymentData.fecha || new Date().toISOString().slice(0, 10),
+      id: paymentData.id || ("pay-" + Date.now()),
+      paymentDate: paymentData.paymentDate || paymentData.fecha || new Date().toISOString().slice(0, 10),
       createdAt: new Date().toISOString()
-    };
+    });
 
     const live = await initFirestoreLive();
     if (live) {
       try {
         const { db, ops } = live;
-        await ops.setDoc(ops.doc(db, "pagos", newPayment.id), newPayment);
+        await ops.setDoc(ops.doc(db, "payments", clean.id), clean, { merge: true });
       } catch (e) {
         console.warn("Firestore createPayment error:", e.message);
       }
     }
 
     const payments = getLocal(STORAGE_KEYS.PAYMENTS) || [];
-    payments.unshift(newPayment);
+    payments.unshift(clean);
     setLocal(STORAGE_KEYS.PAYMENTS, payments);
 
-    if (paymentData.reservaId) {
-      await this.recalcularSaldoReserva(paymentData.reservaId);
+    if (clean.reservationId) {
+      await this.recalculateReservationBalance(clean.reservationId);
     }
 
-    return newPayment;
+    return clean;
   },
 
   async updatePayment(id, paymentData) {
+    const clean = normalizePayment({ ...paymentData, id, updatedAt: new Date().toISOString() });
     const live = await initFirestoreLive();
     if (live) {
       try {
         const { db, ops } = live;
-        await ops.updateDoc(ops.doc(db, "pagos", String(id)), {
-          ...paymentData,
-          updatedAt: new Date().toISOString()
-        });
+        await ops.setDoc(ops.doc(db, "payments", String(id)), clean, { merge: true });
       } catch (e) {
         console.warn("Firestore updatePayment error:", e.message);
       }
@@ -705,17 +832,17 @@ export const dbService = {
     const payments = getLocal(STORAGE_KEYS.PAYMENTS) || [];
     const idx = payments.findIndex(p => String(p.id) === String(id));
     if (idx !== -1) {
-      const oldReservaId = payments[idx].reservaId;
-      payments[idx] = { ...payments[idx], ...paymentData };
+      const oldResId = payments[idx].reservationId;
+      payments[idx] = clean;
       setLocal(STORAGE_KEYS.PAYMENTS, payments);
 
-      if (payments[idx].reservaId) {
-        await this.recalcularSaldoReserva(payments[idx].reservaId);
+      if (clean.reservationId) {
+        await this.recalculateReservationBalance(clean.reservationId);
       }
-      if (oldReservaId && oldReservaId !== payments[idx].reservaId) {
-        await this.recalcularSaldoReserva(oldReservaId);
+      if (oldResId && oldResId !== clean.reservationId) {
+        await this.recalculateReservationBalance(oldResId);
       }
-      return payments[idx];
+      return clean;
     }
     return null;
   },
@@ -725,7 +852,7 @@ export const dbService = {
     if (live) {
       try {
         const { db, ops } = live;
-        await ops.deleteDoc(ops.doc(db, "pagos", String(id)));
+        await ops.deleteDoc(ops.doc(db, "payments", String(id)));
       } catch (e) {
         console.warn("Firestore deletePayment error:", e.message);
       }
@@ -733,35 +860,52 @@ export const dbService = {
 
     const payments = getLocal(STORAGE_KEYS.PAYMENTS) || [];
     const item = payments.find(p => String(p.id) === String(id));
-    const reservaId = item ? item.reservaId : null;
+    const reservationId = item ? item.reservationId : null;
     const filtered = payments.filter(p => String(p.id) !== String(id));
     setLocal(STORAGE_KEYS.PAYMENTS, filtered);
 
-    if (reservaId) {
-      await this.recalcularSaldoReserva(reservaId);
+    if (reservationId) {
+      await this.recalculateReservationBalance(reservationId);
     }
     return true;
   },
 
-  async recalcularSaldoReserva(reservaId) {
-    if (!reservaId) return;
-    const reservas = getLocal(STORAGE_KEYS.RESERVATIONS);
-    const resIdx = reservas.findIndex(r => String(r.id) === String(reservaId));
+  async recalculateReservationBalance(reservationId) {
+    if (!reservationId) return;
+    const reservations = await this.getReservations();
+    const resIdx = reservations.findIndex(r => String(r.id) === String(reservationId));
     if (resIdx !== -1) {
-      const payments = getLocal(STORAGE_KEYS.PAYMENTS);
-      const totalAbonado = payments
-        .filter(p => String(p.reservaId) === String(reservaId))
-        .reduce((sum, p) => sum + (Number(p.monto) || 0), 0);
+      const payments = await this.getPayments();
+      const totalPaid = payments
+        .filter(p => String(p.reservationId) === String(reservationId))
+        .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
       
-      reservas[resIdx].anticipo = totalAbonado;
-      const total = Number(reservas[resIdx].total) || 0;
-      reservas[resIdx].saldo = Math.max(0, total - totalAbonado);
-      setLocal(STORAGE_KEYS.RESERVATIONS, reservas);
+      const total = Number(reservations[resIdx].totalAmount) || 0;
+      const balance = Math.max(0, total - totalPaid);
+      reservations[resIdx].depositAmount = totalPaid;
+      reservations[resIdx].balanceAmount = balance;
+      setLocal(STORAGE_KEYS.RESERVATIONS, reservations);
+
+      const live = await initFirestoreLive();
+      if (live) {
+        try {
+          const { db, ops } = live;
+          await ops.updateDoc(ops.doc(db, "reservations", String(reservationId)), {
+            depositAmount: totalPaid,
+            balanceAmount: balance,
+            updatedAt: new Date().toISOString()
+          });
+        } catch (e) {}
+      }
     }
   },
 
+  // Alias for backward-compatibility
+  async recalcularSaldoReserva(reservaId) {
+    return this.recalculateReservationBalance(reservaId);
+  },
 
-  // GALERÍA Y CATEGORÍAS
+  // GALLERY
   async getGalleryCategories() {
     let cats = getLocal(STORAGE_KEYS.GALLERY_CATEGORIES);
     if (!Array.isArray(cats) || cats.length === 0) {
@@ -802,84 +946,80 @@ export const dbService = {
     if (live) {
       try {
         const { db, ops } = live;
-        const snapshot = await ops.getDocs(ops.collection(db, "galeria"));
+        const snapshot = await ops.getDocs(ops.collection(db, "gallery"));
         if (!snapshot.empty) {
           const remoteItems = [];
-          snapshot.forEach(doc => remoteItems.push({ id: doc.id, ...doc.data() }));
+          snapshot.forEach(doc => remoteItems.push(normalizeGalleryItem({ id: doc.id, ...doc.data() })));
           setLocal(STORAGE_KEYS.GALLERY, remoteItems);
           return remoteItems;
         }
       } catch (err) {
-        console.warn("Firestore getGallery:", err.message);
+        console.warn("Firestore getGallery error:", err.message);
       }
     }
+
     let localItems = getLocal(STORAGE_KEYS.GALLERY);
-    if (!Array.isArray(localItems) || localItems.length === 0) {
-      initDB();
-      localItems = getLocal(STORAGE_KEYS.GALLERY);
-    }
-    return localItems;
+    if (!Array.isArray(localItems)) localItems = [];
+    return localItems.map(item => normalizeGalleryItem(item));
   },
 
-  async addGalleryItem(item) {
-    const newItem = {
-      ...item,
+  async addGalleryItem(itemData) {
+    const clean = normalizeGalleryItem({
+      ...itemData,
+      id: itemData.id || ("gal-" + Date.now()),
       createdAt: new Date().toISOString()
-    };
+    });
 
     const live = await initFirestoreLive();
     if (live) {
       try {
         const { db, ops } = live;
-        const docRef = await ops.addDoc(ops.collection(db, "galeria"), newItem);
-        newItem.id = docRef.id;
+        await ops.setDoc(ops.doc(db, "gallery", clean.id), clean, { merge: true });
       } catch (err) {
-        console.warn("Firestore addGalleryItem:", err.message);
-        newItem.id = "gal-" + Date.now();
+        console.warn("Firestore addGalleryItem error:", err.message);
       }
-    } else {
-      newItem.id = "gal-" + Date.now();
     }
 
-    const gallery = getLocal(STORAGE_KEYS.GALLERY);
-    gallery.unshift(newItem);
+    const gallery = getLocal(STORAGE_KEYS.GALLERY) || [];
+    gallery.unshift(clean);
     setLocal(STORAGE_KEYS.GALLERY, gallery);
-    return newItem;
+    return clean;
   },
 
   async updateGalleryItem(id, itemData) {
+    const clean = normalizeGalleryItem({ ...itemData, id, updatedAt: new Date().toISOString() });
     const live = await initFirestoreLive();
-    if (live && !String(id).startsWith("gal-")) {
+    if (live) {
       try {
         const { db, ops } = live;
-        await ops.updateDoc(ops.doc(db, "galeria", String(id)), itemData);
+        await ops.setDoc(ops.doc(db, "gallery", String(id)), clean, { merge: true });
       } catch (err) {
-        console.warn("Firestore updateGalleryItem:", err.message);
+        console.warn("Firestore updateGalleryItem error:", err.message);
       }
     }
 
-    const gallery = getLocal(STORAGE_KEYS.GALLERY);
+    const gallery = getLocal(STORAGE_KEYS.GALLERY) || [];
     const idx = gallery.findIndex(g => String(g.id) === String(id));
     if (idx !== -1) {
-      gallery[idx] = { ...gallery[idx], ...itemData, id };
+      gallery[idx] = clean;
       setLocal(STORAGE_KEYS.GALLERY, gallery);
       return gallery[idx];
     }
-    return { id, ...itemData };
+    return clean;
   },
 
   async deleteGalleryItem(id) {
     const live = await initFirestoreLive();
-    if (live && !String(id).startsWith("gal-")) {
+    if (live) {
       try {
         const { db, ops } = live;
-        await ops.deleteDoc(ops.doc(db, "galeria", String(id)));
+        await ops.deleteDoc(ops.doc(db, "gallery", String(id)));
       } catch (err) {
-        console.warn("Firestore deleteGalleryItem:", err.message);
+        console.warn("Firestore deleteGalleryItem error:", err.message);
       }
     }
 
-    let gallery = getLocal(STORAGE_KEYS.GALLERY);
+    let gallery = getLocal(STORAGE_KEYS.GALLERY) || [];
     gallery = gallery.filter(g => String(g.id) !== String(id));
     setLocal(STORAGE_KEYS.GALLERY, gallery);
     return true;
@@ -887,29 +1027,33 @@ export const dbService = {
 
   async saveGalleryOrder(orderedItems) {
     if (Array.isArray(orderedItems)) {
-      setLocal(STORAGE_KEYS.GALLERY, orderedItems);
+      const normalized = orderedItems.map((item, idx) => normalizeGalleryItem({ ...item, order: idx }));
+      setLocal(STORAGE_KEYS.GALLERY, normalized);
+      return normalized;
     }
     return orderedItems;
   },
 
-  // CLIENTES
+  // CLIENTS
   async getClients() {
     const live = await initFirestoreLive();
     if (live) {
       try {
         const { db, ops } = live;
-        const snapshot = await ops.getDocs(ops.collection(db, "clientes"));
+        const snapshot = await ops.getDocs(ops.collection(db, "clients"));
         if (!snapshot.empty) {
           const remoteClients = [];
-          snapshot.forEach(doc => remoteClients.push({ id: doc.id, ...doc.data() }));
+          snapshot.forEach(doc => remoteClients.push(normalizeClient({ id: doc.id, ...doc.data() })));
           setLocal(STORAGE_KEYS.CLIENTS, remoteClients);
           return remoteClients;
         }
       } catch (err) {
-        console.warn("Firestore getClients:", err.message);
+        console.warn("Firestore getClients error:", err.message);
       }
     }
-    return getLocal(STORAGE_KEYS.CLIENTS).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+    let clients = getLocal(STORAGE_KEYS.CLIENTS) || [];
+    return clients.map(c => normalizeClient(c)).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
   },
 
   async getClientById(id) {
@@ -918,64 +1062,62 @@ export const dbService = {
   },
 
   async createClient(clientData) {
-    const newClient = {
+    const clean = normalizeClient({
       ...clientData,
+      id: clientData.id || ("cli-" + Date.now()),
       createdAt: new Date().toISOString()
-    };
+    });
 
     const live = await initFirestoreLive();
     if (live) {
       try {
         const { db, ops } = live;
-        const docRef = await ops.addDoc(ops.collection(db, "clientes"), newClient);
-        newClient.id = docRef.id;
+        await ops.setDoc(ops.doc(db, "clients", clean.id), clean, { merge: true });
       } catch (err) {
-        console.warn("Firestore createClient:", err.message);
-        newClient.id = "cli-" + Date.now();
+        console.warn("Firestore createClient error:", err.message);
       }
-    } else {
-      newClient.id = "cli-" + Date.now();
     }
 
-    const clients = getLocal(STORAGE_KEYS.CLIENTS);
-    clients.unshift(newClient);
+    const clients = getLocal(STORAGE_KEYS.CLIENTS) || [];
+    clients.unshift(clean);
     setLocal(STORAGE_KEYS.CLIENTS, clients);
-    return newClient;
+    return clean;
   },
 
   async updateClient(id, clientData) {
+    const clean = normalizeClient({ ...clientData, id, updatedAt: new Date().toISOString() });
     const live = await initFirestoreLive();
-    if (live && !String(id).startsWith("cli-")) {
+    if (live) {
       try {
         const { db, ops } = live;
-        await ops.updateDoc(ops.doc(db, "clientes", String(id)), clientData);
+        await ops.setDoc(ops.doc(db, "clients", String(id)), clean, { merge: true });
       } catch (err) {
-        console.warn("Firestore updateClient:", err.message);
+        console.warn("Firestore updateClient error:", err.message);
       }
     }
 
-    const clients = getLocal(STORAGE_KEYS.CLIENTS);
+    const clients = getLocal(STORAGE_KEYS.CLIENTS) || [];
     const idx = clients.findIndex(c => String(c.id) === String(id));
     if (idx !== -1) {
-      clients[idx] = { ...clients[idx], ...clientData, id };
+      clients[idx] = clean;
       setLocal(STORAGE_KEYS.CLIENTS, clients);
       return clients[idx];
     }
-    return { id, ...clientData };
+    return clean;
   },
 
   async deleteClient(id) {
     const live = await initFirestoreLive();
-    if (live && !String(id).startsWith("cli-")) {
+    if (live) {
       try {
         const { db, ops } = live;
-        await ops.deleteDoc(ops.doc(db, "clientes", String(id)));
+        await ops.deleteDoc(ops.doc(db, "clients", String(id)));
       } catch (err) {
-        console.warn("Firestore deleteClient:", err.message);
+        console.warn("Firestore deleteClient error:", err.message);
       }
     }
 
-    let clients = getLocal(STORAGE_KEYS.CLIENTS);
+    let clients = getLocal(STORAGE_KEYS.CLIENTS) || [];
     clients = clients.filter(c => String(c.id) !== String(id));
     setLocal(STORAGE_KEYS.CLIENTS, clients);
     return true;
@@ -986,78 +1128,75 @@ export const dbService = {
     if (!query || !query.trim()) return clients;
     const q = query.toLowerCase().trim();
     return clients.filter(c => 
-      String(c.nombre || "").toLowerCase().includes(q) ||
-      String(c.telefono || "").toLowerCase().includes(q) ||
-      String(c.documento || "").toLowerCase().includes(q) ||
+      String(c.name || "").toLowerCase().includes(q) ||
+      String(c.phone || "").toLowerCase().includes(q) ||
+      String(c.documentId || "").toLowerCase().includes(q) ||
       String(c.email || "").toLowerCase().includes(q) ||
       String(c.id || "").toLowerCase().includes(q)
     );
   },
 
-  // GESTIÓN DE SERVICIOS
+  // SERVICES
   async getServices() {
     const live = await initFirestoreLive();
     if (live) {
       try {
         const { db, ops } = live;
-        const snapshot = await ops.getDocs(ops.collection(db, "servicios"));
+        const snapshot = await ops.getDocs(ops.collection(db, "services"));
         if (!snapshot.empty) {
           const remoteItems = [];
-          snapshot.forEach(doc => remoteItems.push({ id: doc.id, ...doc.data() }));
+          snapshot.forEach(doc => remoteItems.push(normalizeService({ id: doc.id, ...doc.data() })));
           setLocal(STORAGE_KEYS.SERVICES, remoteItems);
           return remoteItems;
         }
       } catch (err) {
-        console.warn("Firestore getServices:", err.message);
+        console.warn("Firestore getServices error:", err.message);
       }
     }
-    let localItems = getLocal(STORAGE_KEYS.SERVICES);
-    if (!Array.isArray(localItems) || localItems.length === 0) {
-      initLocalStore();
-      localItems = getLocal(STORAGE_KEYS.SERVICES);
-    }
-    return localItems || [];
+
+    let localItems = getLocal(STORAGE_KEYS.SERVICES) || [];
+    return localItems.map(s => normalizeService(s));
   },
 
-  async addService(service) {
-    const newService = {
-      ...service,
+  async addService(serviceData) {
+    const clean = normalizeService({
+      ...serviceData,
+      id: serviceData.id || ("srv-" + Date.now()),
       createdAt: new Date().toISOString()
-    };
+    });
+
     const live = await initFirestoreLive();
     if (live) {
       try {
         const { db, ops } = live;
-        const docRef = await ops.addDoc(ops.collection(db, "servicios"), newService);
-        newService.id = docRef.id;
+        await ops.setDoc(ops.doc(db, "services", clean.id), clean, { merge: true });
       } catch (err) {
         console.warn("Firestore addService error:", err.message);
-        newService.id = "srv-" + Date.now();
       }
-    } else {
-      newService.id = "srv-" + Date.now();
     }
+
     const list = getLocal(STORAGE_KEYS.SERVICES) || [];
-    list.unshift(newService);
+    list.unshift(clean);
     setLocal(STORAGE_KEYS.SERVICES, list);
-    return newService;
+    return clean;
   },
 
   async updateService(id, serviceData) {
+    const clean = normalizeService({ ...serviceData, id, updatedAt: new Date().toISOString() });
     const live = await initFirestoreLive();
     if (live) {
       try {
         const { db, ops } = live;
-        const docRef = ops.doc(db, "servicios", id);
-        await ops.updateDoc(docRef, { ...serviceData, updatedAt: new Date().toISOString() });
+        await ops.setDoc(ops.doc(db, "services", String(id)), clean, { merge: true });
       } catch (err) {
         console.warn("Firestore updateService error:", err.message);
       }
     }
+
     const list = getLocal(STORAGE_KEYS.SERVICES) || [];
     const idx = list.findIndex(s => String(s.id) === String(id));
     if (idx !== -1) {
-      list[idx] = { ...list[idx], ...serviceData, updatedAt: new Date().toISOString() };
+      list[idx] = clean;
       setLocal(STORAGE_KEYS.SERVICES, list);
     }
     return true;
@@ -1068,99 +1207,103 @@ export const dbService = {
     if (live) {
       try {
         const { db, ops } = live;
-        await ops.deleteDoc(ops.doc(db, "servicios", id));
+        await ops.deleteDoc(ops.doc(db, "services", String(id)));
       } catch (err) {
         console.warn("Firestore deleteService error:", err.message);
       }
     }
+
     let list = getLocal(STORAGE_KEYS.SERVICES) || [];
     list = list.filter(s => String(s.id) !== String(id));
     setLocal(STORAGE_KEYS.SERVICES, list);
     return true;
   },
 
-  // ESTADÍSTICAS DEL DASHBOARD
+  // DASHBOARD STATISTICS
   async getStats() {
-    const quotes = getLocal(STORAGE_KEYS.QUOTES);
-    const reservas = getLocal(STORAGE_KEYS.RESERVATIONS);
-    const payments = getLocal(STORAGE_KEYS.PAYMENTS);
-    const clients = getLocal(STORAGE_KEYS.CLIENTS);
+    const quotes = await this.getQuotes();
+    const reservations = await this.getReservations();
+    const payments = await this.getPayments();
+    const clients = await this.getClients();
 
-    const totalIngresos = payments.reduce((acc, p) => acc + (Number(p.monto) || 0), 0);
-    const totalPendiente = reservas.reduce((acc, r) => acc + (Number(r.saldo) || 0), 0);
-    const confirmados = reservas.filter(r => r.estado === "Confirmada" || r.estado === "Finalizado").length;
+    const totalIncome = payments.reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
+    const totalPending = reservations.reduce((acc, r) => acc + (Number(r.balanceAmount) || 0), 0);
+    const confirmedCount = reservations.filter(r => (r.status === "Confirmed" || r.status === "Completed" || r.status === "Confirmada")).length;
 
     return {
       totalQuotes: quotes.length,
-      totalEventos: reservas.length,
+      totalEvents: reservations.length,
+      totalEventos: reservations.length,
+      totalClients: clients.length,
       totalClientes: clients.length,
-      confirmados: confirmados,
-      ingresos: totalIngresos,
-      pendiente: totalPendiente
+      confirmedCount: confirmedCount,
+      confirmados: confirmedCount,
+      totalIncome: totalIncome,
+      ingresos: totalIncome,
+      pendingBalance: totalPending,
+      pendiente: totalPending
     };
   },
 
-  // FRANJA DE ANUNCIO SUPERIOR (CABECERA WEB)
+  // ANNOUNCEMENT BANNER
   async getAnnouncement() {
     let item = getLocal(STORAGE_KEYS.ANNOUNCEMENT);
-    if (!item) {
-      item = { ...DEFAULT_ANNOUNCEMENT };
+    if (!item || !item.title) {
+      item = normalizeAnnouncement(DEFAULT_ANNOUNCEMENT);
       setLocal(STORAGE_KEYS.ANNOUNCEMENT, item);
     }
+
     const live = await initFirestoreLive();
     if (live) {
       try {
         const { db, ops } = live;
-        const docRef = ops.doc(db, "configuracion", "anuncio_superior");
+        const docRef = ops.doc(db, "announcements", "top_banner");
         const snap = await ops.getDoc(docRef);
         if (snap.exists()) {
-          item = snap.data();
+          item = normalizeAnnouncement({ id: snap.id, ...snap.data() });
           setLocal(STORAGE_KEYS.ANNOUNCEMENT, item);
         }
       } catch (err) {
         console.warn("Firestore getAnnouncement error:", err.message);
       }
     }
+
     return item;
   },
 
   async saveAnnouncement(data) {
-    const clean = {
-      activo: data.activo !== false,
-      icono: String(data.icono || "✨").trim(),
-      titulo: String(data.titulo || "").trim(),
-      mensaje: String(data.mensaje || "").trim(),
-      badge: String(data.badge || "").trim(),
-      subtexto: String(data.subtexto || "").trim(),
-      updatedAt: new Date().toISOString()
-    };
+    const clean = normalizeAnnouncement({ ...data, updatedAt: new Date().toISOString() });
     setLocal(STORAGE_KEYS.ANNOUNCEMENT, clean);
+
     const live = await initFirestoreLive();
     if (live) {
       try {
         const { db, ops } = live;
-        const docRef = ops.doc(db, "configuracion", "anuncio_superior");
+        const docRef = ops.doc(db, "announcements", "top_banner");
         await ops.setDoc(docRef, clean, { merge: true });
       } catch (err) {
         console.warn("Firestore saveAnnouncement error:", err.message);
       }
     }
+
     return clean;
   },
 
   async resetAnnouncement() {
-    const clean = { ...DEFAULT_ANNOUNCEMENT, updatedAt: new Date().toISOString() };
+    const clean = normalizeAnnouncement({ ...DEFAULT_ANNOUNCEMENT, updatedAt: new Date().toISOString() });
     setLocal(STORAGE_KEYS.ANNOUNCEMENT, clean);
+
     const live = await initFirestoreLive();
     if (live) {
       try {
         const { db, ops } = live;
-        const docRef = ops.doc(db, "configuracion", "anuncio_superior");
+        const docRef = ops.doc(db, "announcements", "top_banner");
         await ops.setDoc(docRef, clean, { merge: true });
       } catch (err) {
         console.warn("Firestore resetAnnouncement error:", err.message);
       }
     }
+
     return clean;
   }
 };

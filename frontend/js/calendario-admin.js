@@ -38,9 +38,9 @@ function normalizarFechaTexto(fecha) {
 
 function obtenerClaseEstado(estado) {
   const valor = String(estado || "").toLowerCase().trim();
-  if (valor === "pendiente" || valor === "nuevo") return "badge-pendiente";
-  if (valor === "confirmada" || valor === "confirmado" || valor === "finalizado") return "badge-confirmada";
-  if (valor === "cancelada" || valor === "cancelado") return "badge-cancelada";
+  if (valor === "pendiente" || valor === "pending" || valor === "nuevo" || valor === "new") return "badge-pendiente";
+  if (valor === "confirmada" || valor === "confirmed" || valor === "confirmado" || valor === "finalizado" || valor === "completed") return "badge-confirmada";
+  if (valor === "cancelada" || valor === "cancelled" || valor === "canceled" || valor === "cancelado") return "badge-cancelada";
   return "badge-pendiente";
 }
 
@@ -82,17 +82,18 @@ function renderCalendario() {
     const fechaISO = formatearFechaISO(fechaActual);
 
     const eventosDelDia = reservas.filter(item => {
-      const fechaItem = normalizarFechaTexto(item.fecha_evento || item.fecha);
+      const fechaItem = normalizarFechaTexto(item.eventDate || item.fecha_evento || item.fecha);
       return fechaItem === fechaISO;
     });
 
     const itemsHTML = eventosDelDia.map(ev => {
-      const clase = obtenerClaseEstado(ev.estado);
-      const titulo = ev.cliente || "Evento";
-      const tipo = ev.tipo_evento || "Social";
+      const status = ev.status || ev.estado;
+      const clase = obtenerClaseEstado(status);
+      const titulo = ev.clientName || ev.cliente || "Evento";
+      const tipo = ev.eventType || ev.tipo_evento || "Social";
 
       return `
-        <div class="calendar-event-pill ${clase}" title="${titulo} - ${tipo} (${ev.estado})">
+        <div class="calendar-event-pill ${clase}" title="${titulo} - ${tipo} (${status})">
           <strong>${titulo}</strong>
           <span>${tipo}</span>
         </div>

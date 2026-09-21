@@ -446,14 +446,20 @@ if (form) {
 
     const payload = {
       id: id || ("mob-" + Date.now()),
+      name: nombre,
       nombre,
+      category: categoria,
       categoria,
+      price: precio,
       precio,
+      unit: unidad,
       unidad,
       stock: stockTotal,
-      cantidad_total: stockTotal,
-      cantidad_disponible: stockDisp,
+      totalQuantity: stockTotal,
+      availableQuantity: stockDisp,
+      description: descripcion,
       descripcion,
+      imageUrl: finalImage,
       imagen: finalImage
     };
 

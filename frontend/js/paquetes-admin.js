@@ -280,25 +280,25 @@ function renderizarGrilla(list) {
   grid.innerHTML = list.map(pkg => `
     <article class="package-card" style="background: var(--apple-card); border-color: var(--apple-border);">
       <div class="package-image-wrap" style="height: 220px;">
-        <img src="${pkg.imagen || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80'}" alt="${escapeHtml(pkg.titulo)}" class="package-image" loading="lazy" />
+        <img src="${pkg.imageUrl || pkg.imagen || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80'}" alt="${escapeHtml(pkg.title || pkg.titulo)}" class="package-image" loading="lazy" />
         <span class="package-badge" style="background: var(--apple-gold-gradient); color: #111;">${escapeHtml(pkg.badge || 'Todo Incluido')}</span>
       </div>
       <div class="package-body">
-        <h3 class="package-title" style="font-family: 'Playfair Display', serif; font-size: 1.4rem;">${escapeHtml(pkg.titulo)}</h3>
-        <p class="package-desc">${escapeHtml(pkg.descripcion || '')}</p>
+        <h3 class="package-title" style="font-family: 'Playfair Display', serif; font-size: 1.4rem;">${escapeHtml(pkg.title || pkg.titulo)}</h3>
+        <p class="package-desc">${escapeHtml(pkg.description || pkg.descripcion || '')}</p>
         
         <div class="package-price-wrap">
           <span class="price-label">Desde (por invitado)</span>
-          <span class="price-val">$${(pkg.precioPorPersona || 0).toLocaleString("es-CO")} COP</span>
+          <span class="price-val">$${(pkg.pricePerPerson || pkg.precioPorPersona || 0).toLocaleString("es-CO")} COP</span>
         </div>
 
         <div style="font-size: 0.8rem; color: var(--apple-gold-light); margin-bottom: 0.8rem;">
-          👥 Min. sugerido: <strong>${pkg.minimoPersonas || 40} invitados</strong>
+          👥 Min. sugerido: <strong>${pkg.minGuests || pkg.minimoPersonas || 40} invitados</strong>
         </div>
 
         <ul class="package-inclusions-list">
-          ${(pkg.inclusiones || pkg.inclusions || []).slice(0, 4).map(inc => `<li>${escapeHtml(inc)}</li>`).join("")}
-          ${(pkg.inclusiones || []).length > 4 ? `<li style="list-style: none; color: var(--apple-gold-light); font-size: 0.82rem; font-weight: 600;">+ ${(pkg.inclusiones.length - 4)} inclusiones adicionales</li>` : ''}
+          ${(pkg.inclusions || pkg.inclusiones || []).slice(0, 4).map(inc => `<li>${escapeHtml(inc)}</li>`).join("")}
+          ${(pkg.inclusions || pkg.inclusiones || []).length > 4 ? `<li style="list-style: none; color: var(--apple-gold-light); font-size: 0.82rem; font-weight: 600;">+ ${((pkg.inclusions || pkg.inclusiones).length - 4)} inclusiones adicionales</li>` : ''}
         </ul>
 
         <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
@@ -438,14 +438,14 @@ async function guardarPaquete(e) {
   }
 
   const pkgData = {
-    titulo,
-    categoria,
+    title: titulo,
+    category: categoria,
     badge,
-    precioPorPersona,
-    minimoPersonas,
-    descripcion,
-    imagen,
-    inclusiones: currentInclusions
+    pricePerPerson: precioPorPersona,
+    minGuests: minimoPersonas,
+    description: descripcion,
+    imageUrl: imagen,
+    inclusions: currentInclusions
   };
 
   try {

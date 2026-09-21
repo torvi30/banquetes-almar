@@ -417,39 +417,118 @@ async function runMigration() {
 
     console.log("\n📦 1. Migrando Catálogo de Mobiliario e Inventario a Firestore...");
     for (const item of INVENTORY_DATA) {
-      await setDoc(doc(db, "mobiliario_alquiler", item.id), item, { merge: true });
+      const clean = {
+        id: item.id,
+        name: item.nombre,
+        category: item.categoria,
+        price: item.precio,
+        unit: item.unidad,
+        stock: item.stock || item.cantidad_total,
+        totalQuantity: item.cantidad_total,
+        availableQuantity: item.cantidad_disponible,
+        description: item.descripcion,
+        imageUrl: item.imagen,
+        isActive: item.activo !== false,
+        createdAt: item.createdAt || new Date().toISOString()
+      };
+      await setDoc(doc(db, "inventory", clean.id), clean, { merge: true });
     }
-    console.log(`   ✅ ${INVENTORY_DATA.length} artículos de inventario migrados a 'mobiliario_alquiler'.`);
+    console.log(`   ✅ ${INVENTORY_DATA.length} artículos de inventario migrados a 'inventory'.`);
 
     console.log("\n👥 2. Migrando Directorio de Clientes...");
     for (const client of CLIENTS_DATA) {
-      await setDoc(doc(db, "clientes", client.id), client, { merge: true });
+      const clean = {
+        id: client.id,
+        name: client.nombre,
+        phone: client.telefono,
+        email: client.email,
+        address: client.direccion,
+        city: client.ciudad,
+        documentId: client.documento,
+        eventsCount: client.totalEventos,
+        totalBilled: client.totalFacturado,
+        createdAt: client.createdAt || new Date().toISOString()
+      };
+      await setDoc(doc(db, "clients", clean.id), clean, { merge: true });
     }
-    console.log(`   ✅ ${CLIENTS_DATA.length} clientes migrados a colección 'clientes'.`);
+    console.log(`   ✅ ${CLIENTS_DATA.length} clientes migrados a colección 'clients'.`);
 
     console.log("\n📅 3. Migrando Reservas y Eventos (Modelo NoSQL Desnormalizado)...");
     for (const res of RESERVATIONS_DATA) {
-      await setDoc(doc(db, "reservas", res.id), res, { merge: true });
+      const clean = {
+        id: res.id,
+        clientName: res.cliente,
+        phone: res.telefono,
+        eventType: res.tipo_evento,
+        guestCount: res.personas,
+        eventDate: res.fecha_evento,
+        eventTime: res.hora_evento,
+        location: res.locacion,
+        totalAmount: res.total,
+        depositAmount: res.anticipo,
+        balanceAmount: res.saldo,
+        status: res.estado,
+        notes: res.observaciones,
+        rentalItems: res.items_mobiliario || [],
+        createdAt: res.createdAt || new Date().toISOString()
+      };
+      await setDoc(doc(db, "reservations", clean.id), clean, { merge: true });
     }
-    console.log(`   ✅ ${RESERVATIONS_DATA.length} reservas y eventos migrados a colección 'reservas'.`);
+    console.log(`   ✅ ${RESERVATIONS_DATA.length} reservas y eventos migrados a colección 'reservations'.`);
 
     console.log("\n💬 4. Migrando Solicitudes y Cotizaciones Web...");
     for (const quote of QUOTES_DATA) {
-      await setDoc(doc(db, "cotizaciones", quote.id), quote, { merge: true });
+      const clean = {
+        id: quote.id,
+        clientName: quote.nombre,
+        phone: quote.telefono,
+        email: quote.email,
+        eventType: quote.evento,
+        location: quote.locacion,
+        guestCount: quote.personas,
+        packageId: quote.paqueteId,
+        estimatedTotal: quote.totalEstimado,
+        suggestedDeposit: quote.anticipoSugerido,
+        message: quote.mensaje,
+        status: quote.estado,
+        eventDate: quote.fechaEvento,
+        createdAt: quote.createdAt || new Date().toISOString()
+      };
+      await setDoc(doc(db, "quotes", clean.id), clean, { merge: true });
     }
-    console.log(`   ✅ ${QUOTES_DATA.length} cotizaciones migradas a 'cotizaciones'.`);
+    console.log(`   ✅ ${QUOTES_DATA.length} cotizaciones migradas a 'quotes'.`);
 
     console.log("\n💵 5. Migrando Transacciones Financieras y Abonos...");
     for (const pay of PAYMENTS_DATA) {
-      await setDoc(doc(db, "pagos", pay.id), pay, { merge: true });
+      const clean = {
+        id: pay.id,
+        reservationId: pay.reservaId,
+        clientName: pay.cliente,
+        amount: pay.monto,
+        concept: pay.concepto,
+        method: pay.metodo,
+        paymentDate: pay.fecha,
+        reference: pay.referencia,
+        createdAt: pay.createdAt || new Date().toISOString()
+      };
+      await setDoc(doc(db, "payments", clean.id), clean, { merge: true });
     }
-    console.log(`   ✅ ${PAYMENTS_DATA.length} pagos migrados a colección 'pagos'.`);
+    console.log(`   ✅ ${PAYMENTS_DATA.length} pagos migrados a colección 'payments'.`);
 
     console.log("\n✨ 6. Migrando Galería y Portafolio Visual...");
     for (const gal of GALLERY_DATA) {
-      await setDoc(doc(db, "galeria", gal.id), gal, { merge: true });
+      const clean = {
+        id: gal.id,
+        title: gal.titulo,
+        category: gal.categoria,
+        imageUrl: gal.imagen,
+        description: gal.descripcion,
+        order: gal.order || 0,
+        createdAt: gal.createdAt || new Date().toISOString()
+      };
+      await setDoc(doc(db, "gallery", clean.id), clean, { merge: true });
     }
-    console.log(`   ✅ ${GALLERY_DATA.length} montajes de galería migrados a colección 'galeria'.`);
+    console.log(`   ✅ ${GALLERY_DATA.length} montajes de galería migrados a colección 'gallery'.`);
 
     console.log("\n===============================================================");
     console.log("🎉 ¡MIGRACIÓN A FIREBASE FIRESTORE COMPLETADA CON ÉXITO!");

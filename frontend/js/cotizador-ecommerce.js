@@ -180,22 +180,22 @@ export function initCotizadorEcommerce() {
     try {
       // 1. Guardar en Firestore / Base de datos
       const nuevaCotizacion = await dbService.createQuote({
-        nombre,
-        telefono,
+        clientName: nombre,
+        phone: telefono,
         email,
-        evento: tipoTexto,
-        personas: calc.personas,
-        locacion: locacionTexto,
+        eventType: tipoTexto,
+        guestCount: calc.personas,
+        location: locacionTexto,
         menu: menuTexto,
-        mobiliario: mobTexto,
-        decoracion: decorTexto,
+        furniture: mobTexto,
+        decoration: decorTexto,
         audiovisual: avTexto,
-        totalEstimado: calc.totalGeneral,
-        anticipoSugerido: calc.anticipoSugerido,
-        valorPorPersona: calc.valorPorPersonaFinal,
-        fechaEvento,
-        mensaje: notas,
-        origen: "simulador_ecommerce"
+        estimatedTotal: calc.totalGeneral,
+        suggestedDeposit: calc.anticipoSugerido,
+        pricePerPerson: calc.valorPorPersonaFinal,
+        eventDate: fechaEvento,
+        message: notas,
+        source: "simulador_ecommerce"
       });
 
       // 2. Armar mensaje estructurado para WhatsApp

@@ -65,12 +65,12 @@ async function loadAnnouncementData() {
 }
 
 function populateForm(data) {
-  if (activeInput) activeInput.checked = data.activo !== false;
-  if (iconInput) iconInput.value = data.icono || "✨";
-  if (titleInput) titleInput.value = data.titulo || "";
-  if (msgInput) msgInput.value = data.mensaje || "";
+  if (activeInput) activeInput.checked = (data.isActive !== undefined ? data.isActive : data.activo) !== false;
+  if (iconInput) iconInput.value = data.icon || data.icono || "✨";
+  if (titleInput) titleInput.value = data.title || data.titulo || "";
+  if (msgInput) msgInput.value = data.message || data.mensaje || "";
   if (badgeInput) badgeInput.value = data.badge || "";
-  if (subtextInput) subtextInput.value = data.subtexto || "";
+  if (subtextInput) subtextInput.value = data.subtext || data.subtexto || "";
 }
 
 // Actualizar la vista previa en tiempo real
@@ -238,12 +238,12 @@ function setupFormSubmit() {
     e.preventDefault();
 
     const data = {
-      activo: activeInput ? activeInput.checked : true,
-      icono: iconInput ? iconInput.value.trim() : "✨",
-      titulo: titleInput ? titleInput.value.trim() : "",
-      mensaje: msgInput ? msgInput.value.trim() : "",
+      isActive: activeInput ? activeInput.checked : true,
+      icon: iconInput ? iconInput.value.trim() : "✨",
+      title: titleInput ? titleInput.value.trim() : "",
+      message: msgInput ? msgInput.value.trim() : "",
       badge: badgeInput ? badgeInput.value.trim() : "",
-      subtexto: subtextInput ? subtextInput.value.trim() : ""
+      subtext: subtextInput ? subtextInput.value.trim() : ""
     };
 
     try {

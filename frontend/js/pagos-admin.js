@@ -466,14 +466,20 @@ if (form) {
       if (editId) {
         // ACTUALIZAR PAGO EXISTENTE
         await dbService.updatePayment(editId, {
-          monto,
-          metodo,
-          fecha,
-          comprobante,
-          comprobanteUrl: voucherUrl,
+          amount: monto,
+          monto: monto,
+          method: metodo,
+          metodo: metodo,
+          paymentDate: fecha,
+          fecha: fecha,
+          reference: comprobante,
+          receiptUrl: voucherUrl,
+          concept: nota,
           concepto: nota,
+          reservationId: resId,
           reservaId: resId,
-          cliente
+          clientName: cliente,
+          cliente: cliente
         });
 
         Swal.fire({
@@ -486,14 +492,20 @@ if (form) {
       } else {
         // CREAR NUEVO ABONO
         const nuevoPago = await dbService.createPayment({
-          monto,
-          metodo,
-          fecha,
-          comprobante,
-          comprobanteUrl: voucherUrl,
+          amount: monto,
+          monto: monto,
+          method: metodo,
+          metodo: metodo,
+          paymentDate: fecha,
+          fecha: fecha,
+          reference: comprobante,
+          receiptUrl: voucherUrl,
+          concept: nota,
           concepto: nota,
+          reservationId: resId,
           reservaId: resId,
-          cliente
+          clientName: cliente,
+          cliente: cliente
         });
 
         // Diálogo con opción de enviar comprobante por WhatsApp o ver recibo

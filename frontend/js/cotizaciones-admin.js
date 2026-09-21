@@ -94,7 +94,7 @@ function renderEmptyCol(texto, icon = "📥") {
 }
 
 function getEventTimestamp(item) {
-  const str = item.fechaEvento || item.fecha_evento || item.fecha;
+  const str = item.eventDate || item.fechaEvento || item.fecha_evento || item.fecha;
   if (str) {
     const d = new Date(str.length === 10 ? `${str}T00:00:00` : str);
     if (!Number.isNaN(d.getTime())) return d.getTime();
@@ -119,29 +119,29 @@ function calcularDiasFaltantes(strFecha) {
 }
 
 function buildWhatsAppLink(item) {
-  const rawPhone = String(item.telefono || "").replace(/\D/g, "");
+  const rawPhone = String(item.phone || item.telefono || "").replace(/\D/g, "");
   const cleanPhone = rawPhone.startsWith("57") ? rawPhone : `57${rawPhone}`;
-  const nombre = item.nombre || "Estimado cliente";
-  const evento = item.evento || item.tipo_evento || "su evento";
-  const personas = item.personas ? ` para ${item.personas} personas` : "";
-  const locacion = item.locacion ? ` en ${item.locacion}` : "";
-  const fechaStr = item.fechaEvento || item.fecha_evento ? ` (fecha: ${formatearFecha(item.fechaEvento || item.fecha_evento)})` : "";
+  const nombre = item.clientName || item.nombre || "Estimado cliente";
+  const evento = item.eventType || item.evento || item.tipo_evento || "su evento";
+  const personas = (item.guestCount || item.personas) ? ` para ${item.guestCount || item.personas} personas` : "";
+  const locacion = (item.location || item.locacion) ? ` en ${item.location || item.locacion}` : "";
+  const fechaStr = (item.eventDate || item.fechaEvento || item.fecha_evento) ? ` (fecha: ${formatearFecha(item.eventDate || item.fechaEvento || item.fecha_evento)})` : "";
   
   const text = `Hola ${nombre}, un gusto saludarte de Banquetes Almar (Marinilla). Vimos tu solicitud de cotización para ${evento}${personas}${locacion}${fechaStr}. Con gusto te brindamos asesoría personalizada para tu fecha. ¿Qué detalles o inquietudes tienes?`;
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
 }
 
 function crearCardPipeline(item) {
-  const esCotizacion = item.origen !== "reserva" && item.origen !== "carrito_alquiler";
-  const totalVal = Number(item.totalEstimado || item.total || 0);
+  const esCotizacion = item.source !== "reserva" && item.origen !== "reserva" && item.origen !== "carrito_alquiler";
+  const totalVal = Number(item.estimatedTotal ?? item.totalEstimado ?? item.total ?? 0);
   const totalDisplay = totalVal > 0 ? formatearDinero(totalVal) : "Por cotizar";
-  const cleanPhone = String(item.telefono || "").replace(/\D/g, "");
-  const initials = getInitials(item.nombre);
+  const cleanPhone = String(item.phone || item.telefono || "").replace(/\D/g, "");
+  const initials = getInitials(item.clientName || item.nombre);
   const waLink = buildWhatsAppLink(item);
-  const estadoNorm = normalizarEstado(item.estado);
+  const estadoNorm = normalizarEstado(item.status || item.estado);
 
   // Fecha del evento y cálculo de proximidad
-  const fechaEventoStr = item.fechaEvento || item.fecha_evento || item.fecha;
+  const fechaEventoStr = item.eventDate || item.fechaEvento || item.fecha_evento || item.fecha;
   const diasFaltantes = calcularDiasFaltantes(fechaEventoStr);
 
   let badgeProximidad = "";

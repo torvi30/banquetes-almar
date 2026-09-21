@@ -491,19 +491,19 @@ export const EventStudio = {
       // Guardar en Firestore
       try {
         await dbService.createQuote({
-          nombre,
-          telefono,
-          evento: celLabel,
-          locacion: loc.label,
-          personas: calc.guests,
+          clientName: nombre,
+          phone: telefono,
+          eventType: celLabel,
+          location: loc.label,
+          guestCount: calc.guests,
           menu: cat.label,
-          mobiliario: stg.label,
-          totalEstimado: calc.total,
-          anticipoSugerido: calc.depositSuggested,
-          valorPorPersona: calc.perPersonFinal,
-          fechaEvento: fecha,
-          mensaje: `Adicionales:\n${addonsText}${notas ? `\nNotas: ${notas}` : ""}`,
-          origen: "apple_studio_configurator"
+          furniture: stg.label,
+          estimatedTotal: calc.total,
+          suggestedDeposit: calc.depositSuggested,
+          pricePerPerson: calc.perPersonFinal,
+          eventDate: fecha,
+          message: `Adicionales:\n${addonsText}${notas ? `\nNotas: ${notas}` : ""}`,
+          source: "apple_studio_configurator"
         });
       } catch (err) {
         console.warn("Offline fallback", err);

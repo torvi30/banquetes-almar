@@ -128,21 +128,24 @@ function renderServices(items) {
   }
 
   grid.innerHTML = items.map(item => {
-    const badge = getCategoryBadge(item.categoria);
-    const imgUrl = item.imagen || "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80";
+    const title = item.name || item.titulo || "Servicio";
+    const category = item.category || item.categoria || "Producción";
+    const description = item.description || item.descripcion || "";
+    const badge = getCategoryBadge(category);
+    const imgUrl = item.imageUrl || item.imagen || "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80";
 
     return `
       <article class="service-card" style="background: #111115; border: 1px solid var(--apple-border); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 8px 24px rgba(0,0,0,0.5);">
         <div style="position: relative; width: 100%; height: 190px; background: #070709; overflow: hidden;">
-          <img src="${imgUrl}" alt="${item.titulo}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease;" loading="lazy" />
+          <img src="${imgUrl}" alt="${title}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease;" loading="lazy" />
           <span style="position: absolute; top: 12px; left: 12px; background: rgba(10, 10, 14, 0.88); backdrop-filter: blur(8px); border: 1px solid rgba(212, 175, 55, 0.35); color: var(--gold-light); font-size: 0.76rem; font-weight: 600; padding: 4px 12px; border-radius: 999px;">
             ${badge.icon} ${badge.label}
           </span>
         </div>
 
         <div style="padding: 1.3rem; display: flex; flex-direction: column; flex-grow: 1;">
-          <h3 style="color: #fff; font-family: 'Playfair Display', serif; font-size: 1.2rem; margin: 0 0 0.5rem 0; line-height: 1.35;">${item.titulo}</h3>
-          <p style="color: var(--apple-text-secondary); font-size: 0.86rem; line-height: 1.55; margin: 0 0 1.2rem 0; flex-grow: 1;">${item.descripcion || ""}</p>
+          <h3 style="color: #fff; font-family: 'Playfair Display', serif; font-size: 1.2rem; margin: 0 0 0.5rem 0; line-height: 1.35;">${title}</h3>
+          <p style="color: var(--apple-text-secondary); font-size: 0.86rem; line-height: 1.55; margin: 0 0 1.2rem 0; flex-grow: 1;">${description}</p>
 
           <div style="display: flex; gap: 0.6rem; padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.06);">
             <button class="btn btn-secondary btn-sm edit-btn" data-id="${item.id}" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0.6rem 0.8rem;">
@@ -164,18 +167,23 @@ function renderServices(items) {
       const item = servicesCache.find(s => String(s.id) === String(id));
       if (!item) return;
 
+      const title = item.name || item.titulo || "";
+      const category = item.category || item.categoria || "Catering";
+      const description = item.description || item.descripcion || "";
+      const img = item.imageUrl || item.imagen || "";
+
       serviceIdInput.value = item.id;
-      serviceCurrentImage.value = item.imagen || "";
-      tituloInput.value = item.titulo || "";
-      if (categoriaInput) categoriaInput.value = item.categoria || "Catering";
-      descripcionInput.value = item.descripcion || "";
-      if (imagenUrlInput) imagenUrlInput.value = item.imagen && item.imagen.startsWith("http") ? item.imagen : "";
+      serviceCurrentImage.value = img;
+      tituloInput.value = title;
+      if (categoriaInput) categoriaInput.value = category;
+      descripcionInput.value = description;
+      if (imagenUrlInput) imagenUrlInput.value = img && img.startsWith("http") ? img : "";
 
       base64Preview = "";
-      setPreview(item.imagen || "");
+      setPreview(img);
 
       saveServiceBtn.textContent = "Actualizar servicio";
-      formTitle.textContent = `Editar: "${item.titulo}"`;
+      formTitle.textContent = `Editar: "${title}"`;
       cancelEditBtn.style.display = "inline-block";
 
       form.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -187,7 +195,7 @@ function renderServices(items) {
     btn.addEventListener("click", async () => {
       const id = btn.dataset.id;
       const item = servicesCache.find(s => String(s.id) === String(id));
-      const nombre = item ? item.titulo : "este servicio";
+      const nombre = item ? (item.name || item.titulo) : "este servicio";
 
       const confirmacion = await Swal.fire({
         icon: "warning",
@@ -230,14 +238,14 @@ function filtrarServicios() {
   let filtrados = servicesCache;
 
   if (cat !== "Todos") {
-    filtrados = filtrados.filter(s => (s.categoria || "").toLowerCase().includes(cat.toLowerCase()));
+    filtrados = filtrados.filter(s => (s.category || s.categoria || "").toLowerCase().includes(cat.toLowerCase()));
   }
 
   if (query) {
     filtrados = filtrados.filter(s =>
-      (s.titulo || "").toLowerCase().includes(query) ||
-      (s.descripcion || "").toLowerCase().includes(query) ||
-      (s.categoria || "").toLowerCase().includes(query)
+      (s.name || s.titulo || "").toLowerCase().includes(query) ||
+      (s.description || s.descripcion || "").toLowerCase().includes(query) ||
+      (s.category || s.categoria || "").toLowerCase().includes(query)
     );
   }
 
@@ -298,10 +306,10 @@ form.addEventListener("submit", async (e) => {
   }
 
   const payload = {
-    titulo,
-    categoria,
-    descripcion,
-    imagen: finalImage
+    name: titulo,
+    category: categoria,
+    description: descripcion,
+    imageUrl: finalImage
   };
 
   try {

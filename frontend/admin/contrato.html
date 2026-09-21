@@ -485,57 +485,57 @@
       }
 
       // Cliente
-      const clientName = (isReservation ? item.cliente : item.nombre) || "Cliente";
+      const clientName = (item.clientName || item.cliente || item.nombre) || "Cliente";
       document.getElementById("contratoCliente").textContent = clientName;
       document.getElementById("signClienteNombre").textContent = clientName.toUpperCase();
 
-      const phone = item.telefono || "No especificado";
+      const phone = item.phone || item.telefono || "No especificado";
       document.getElementById("contratoTelefono").textContent = phone;
       document.getElementById("contratoEmail").textContent = item.email || "cliente@banquetesalmar.com";
-      document.getElementById("contratoClienteDoc").textContent = item.cedula || item.nit || "C.C. _______________________";
-      document.getElementById("signClienteDoc").textContent = (item.cedula || item.nit) ? `C.C. ${item.cedula || item.nit} • Firma` : "C.C. ___________________ • Firma & Huella";
-      document.getElementById("contratoDomicilio").textContent = item.direccion || item.ciudad || "Marinilla / El Peñol, Antioquia";
-      document.getElementById("contratoCanal").textContent = isReservation ? "Reserva Directa" : (item.origen === "carrito_alquiler" ? "Mobiliario & Alquiler" : "Cotizador Web");
+      document.getElementById("contratoClienteDoc").textContent = item.documentId || item.cedula || item.nit || "C.C. _______________________";
+      document.getElementById("signClienteDoc").textContent = (item.documentId || item.cedula || item.nit) ? `C.C. ${item.documentId || item.cedula || item.nit} • Firma` : "C.C. ___________________ • Firma & Huella";
+      document.getElementById("contratoDomicilio").textContent = item.address || item.direccion || item.city || item.ciudad || "Marinilla / El Peñol, Antioquia";
+      document.getElementById("contratoCanal").textContent = isReservation ? "Reserva Directa" : (item.source === "carrito_alquiler" || item.origen === "carrito_alquiler" ? "Mobiliario & Alquiler" : "Cotizador Web");
 
       // Evento
-      const eventType = isReservation ? (item.tipo_evento || "Evento Social") : (item.evento || "Celebración Social");
+      const eventType = item.eventType || (isReservation ? item.tipo_evento : item.evento) || "Celebración Social";
       document.getElementById("contratoTipoEvento").textContent = eventType;
 
-      const eventDateStr = isReservation ? item.fecha_evento : item.fechaEvento;
+      const eventDateStr = item.eventDate || (isReservation ? item.fecha_evento : item.fechaEvento);
       document.getElementById("contratoFechaEvento").textContent = formatDateFull(eventDateStr);
 
-      const location = item.locacion || item.lugar || "Salón de Gala Almar (Marinilla)";
+      const location = item.location || item.locacion || item.lugar || "Salón de Gala Almar (Marinilla)";
       document.getElementById("contratoLocacion").textContent = location;
 
-      const guests = item.personas || item.invitados || 0;
+      const guests = item.guestCount || item.personas || item.invitados || 0;
       document.getElementById("contratoPersonas").textContent = `${guests} personas garantizadas`;
 
-      const eventTime = item.hora_evento ? `${item.hora_evento} (Servicio de 8 Horas continuas)` : "16:00 a 00:00 (8 Horas continuas)";
+      const eventTime = item.eventTime || item.hora_evento ? `${item.eventTime || item.hora_evento} (Servicio de 8 Horas continuas)` : "16:00 a 00:00 (8 Horas continuas)";
       document.getElementById("contratoHorario").textContent = eventTime;
 
       // Paquete e Inclusiones Dinámicas
-      const packageId = item.paqueteId || item.paquete_id || "";
+      const packageId = item.packageId || item.paqueteId || item.paquete_id || "";
       const pkgList = (globalPackages && globalPackages.length > 0) ? globalPackages : [];
       let pkg = pkgList.find(p => String(p.id) === String(packageId));
       if (!pkg) {
         // Fallback inteligente según el tipo de evento
         const eventLower = String(eventType || "").toLowerCase();
         if (eventLower.includes("boda")) {
-          pkg = pkgList.find(p => (p.categoria || "").toLowerCase() === "bodas" || (p.titulo || "").toLowerCase().includes("boda")) || pkgList[0];
+          pkg = pkgList.find(p => (p.category || p.categoria || "").toLowerCase() === "bodas" || (p.title || p.titulo || "").toLowerCase().includes("boda")) || pkgList[0];
         } else if (eventLower.includes("quince") || eventLower.includes("15")) {
-          pkg = pkgList.find(p => (p.categoria || "").toLowerCase() === "quince" || (p.titulo || "").toLowerCase().includes("quince")) || pkgList[0];
+          pkg = pkgList.find(p => (p.category || p.categoria || "").toLowerCase() === "quince" || (p.title || p.titulo || "").toLowerCase().includes("quince")) || pkgList[0];
         } else if (eventLower.includes("grado")) {
-          pkg = pkgList.find(p => (p.categoria || "").toLowerCase() === "grados" || (p.titulo || "").toLowerCase().includes("grado")) || pkgList[0];
+          pkg = pkgList.find(p => (p.category || p.categoria || "").toLowerCase() === "grados" || (p.title || p.titulo || "").toLowerCase().includes("grado")) || pkgList[0];
         } else {
           pkg = pkgList[0];
         }
       }
 
       if (pkg) {
-        document.getElementById("contratoPaqueteNombre").textContent = pkg.titulo || `${eventType} Todo Incluido`;
-        const inclusions = (Array.isArray(pkg.inclusiones) && pkg.inclusiones.length > 0)
-          ? pkg.inclusiones
-          : (Array.isArray(pkg.inclusions) && pkg.inclusions.length > 0 ? pkg.inclusions : []);
+        document.getElementById("contratoPaqueteNombre").textContent = pkg.title || pkg.titulo || `${eventType} Todo Incluido`;
+        const inclusions = (Array.isArray(pkg.inclusions) && pkg.inclusions.length > 0)
+          ? pkg.inclusions
+          : (Array.isArray(pkg.inclusiones) && pkg.inclusiones.length > 0 ? pkg.inclusiones : []);
 
         if (inclusions.length > 0) {
           const listHtml = inclusions.map(inc => `<li>${inc}</li>`).join("");
@@ -544,7 +544,7 @@
       }
 
       // Observaciones particulares
-      const notes = item.observaciones || item.mensaje || "Montaje campestre con mantelería de lujo y ambientación floral.";
+      const notes = item.notes || item.observaciones || item.message || item.mensaje || "Montaje campestre con mantelería de lujo y ambientación floral.";
       document.getElementById("contratoObservaciones").textContent = notes;
 
       // Totales Financieros
@@ -553,12 +553,12 @@
       let saldo = 0;
 
       if (isReservation) {
-        total = Number(item.total || 0);
-        anticipo = Number(item.anticipo || 0);
-        saldo = total - anticipo;
+        total = Number(item.totalAmount ?? item.total ?? 0);
+        anticipo = Number(item.depositAmount ?? item.anticipo ?? 0);
+        saldo = Number(item.balanceAmount ?? (total - anticipo));
       } else {
-        total = Number(item.totalEstimado || item.total || 0);
-        anticipo = Number(item.anticipoSugerido || Math.round(total * 0.35));
+        total = Number(item.estimatedTotal ?? item.totalEstimado ?? item.total ?? 0);
+        anticipo = Number(item.suggestedDeposit ?? item.anticipoSugerido ?? Math.round(total * 0.35));
         saldo = total - anticipo;
       }
 

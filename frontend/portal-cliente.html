@@ -1024,13 +1024,13 @@ Configurado en vivo en el Portal VIP de Clientes Banquetes Almar.`;
 
         // 1. Guardar en Base de Datos
         await dbService.createPayment({
-          reservaId: reservaActual.id,
-          cliente: reservaActual.cliente,
-          monto: monto,
-          metodo: metodo,
-          concepto: `Abono reportado por anfitrión (Ref: ${ref})`,
-          fecha: new Date().toISOString().slice(0, 10),
-          estado: "Pendiente Verificación"
+          reservationId: reservaActual.id,
+          clientName: reservaActual.clientName || reservaActual.cliente,
+          amount: monto,
+          method: metodo,
+          concept: `Abono reportado por anfitrión (Ref: ${ref})`,
+          paymentDate: new Date().toISOString().slice(0, 10),
+          status: "Pending Verification"
         });
 
         // 2. Cerrar Modal y refrescar vista

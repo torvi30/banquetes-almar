@@ -127,19 +127,19 @@ function updateMetrics() {
   const clientsWithEventsSet = new Set();
 
   allClients.forEach(c => {
-    const tipo = (c.tipo_cliente || "").toLowerCase();
+    const tipo = (c.clientType || c.tipo_cliente || "").toLowerCase();
     if (tipo.includes("vip") || tipo.includes("empresa")) {
       vipCount++;
     }
   });
 
   allReservations.forEach(r => {
-    totalLtvSum += Number(r.total || 0);
-    if (r.cliente_id) {
-      clientsWithEventsSet.add(String(r.cliente_id));
-    } else if (r.cliente) {
+    totalLtvSum += Number(r.totalAmount ?? r.total ?? 0);
+    if (r.clientId || r.cliente_id) {
+      clientsWithEventsSet.add(String(r.clientId || r.cliente_id));
+    } else if (r.clientName || r.cliente) {
       // Búsqueda por nombre de cliente si no tiene id
-      const matched = allClients.find(c => c.nombre && c.nombre.toLowerCase() === r.cliente.toLowerCase());
+      const matched = allClients.find(c => (c.name || c.nombre || "").toLowerCase() === (r.clientName || r.cliente).toLowerCase());
       if (matched) clientsWithEventsSet.add(String(matched.id));
     }
   });
@@ -157,10 +157,10 @@ function applyFilters() {
   const sortBy = sortClientes?.value || "recientes";
 
   let filtered = allClients.filter(c => {
-    const fullText = `${c.nombre || ""} ${c.telefono || ""} ${c.documento || ""} ${c.email || ""} ${c.direccion || ""}`.toLowerCase();
+    const fullText = `${c.name || c.nombre || ""} ${c.phone || c.telefono || ""} ${c.documentId || c.documento || ""} ${c.email || ""} ${c.address || c.direccion || ""}`.toLowerCase();
     const matchQuery = !query || fullText.includes(query);
 
-    const clientType = (c.tipo_cliente || "cliente").toLowerCase();
+    const clientType = (c.clientType || c.tipo_cliente || "cliente").toLowerCase();
     const matchType = !filterType || clientType.includes(filterType);
 
     return matchQuery && matchType;
@@ -169,10 +169,10 @@ function applyFilters() {
   // Ordenamiento
   filtered.sort((a, b) => {
     if (sortBy === "az") {
-      return (a.nombre || "").localeCompare(b.nombre || "");
+      return (a.name || a.nombre || "").localeCompare(b.name || b.nombre || "");
     }
     if (sortBy === "za") {
-      return (b.nombre || "").localeCompare(a.nombre || "");
+      return (b.name || b.nombre || "").localeCompare(a.name || a.nombre || "");
     }
     // "recientes" por defecto
     const dateA = new Date(a.createdAt || 0).getTime();
@@ -199,8 +199,8 @@ function renderClientsGrid(clients) {
   }
 
   clients.forEach(client => {
-    const initials = getInitials(client.nombre);
-    const tipo = client.tipo_cliente || "Cliente";
+    const initials = getInitials(client.name || client.nombre);
+    const tipo = client.clientType || client.tipo_cliente || "Cliente";
     let badgeClass = "badge-estandar";
     let typeIcon = "👤";
 
@@ -212,15 +212,17 @@ function renderClientsGrid(clients) {
       typeIcon = "🏢";
     }
 
-    const cleanPhone = String(client.telefono || "").replace(/\D/g, "");
+    const cleanPhone = String(client.phone || client.telefono || "").replace(/\D/g, "");
     const waUrl = cleanPhone
-      ? `https://wa.me/57${cleanPhone}?text=${encodeURIComponent(`¡Hola ${client.nombre}! ✨ Te saludamos desde Banquetes Almar en Marinilla. ¿En qué podemos asesorarte hoy?`)}`
+      ? `https://wa.me/57${cleanPhone}?text=${encodeURIComponent(`¡Hola ${client.name || client.nombre}! ✨ Te saludamos desde Banquetes Almar en Marinilla. ¿En qué podemos asesorarte hoy?`)}`
       : "";
 
     // Contar eventos asociados
     const eventCount = allReservations.filter(r => {
-      if (r.cliente_id && String(r.cliente_id) === String(client.id)) return true;
-      if (r.cliente && client.nombre && r.cliente.toLowerCase() === client.nombre.toLowerCase()) return true;
+      const reservationClientId = r.clientId || r.cliente_id;
+      if (reservationClientId && String(reservationClientId) === String(client.id)) return true;
+      const reservationClientName = r.clientName || r.cliente;
+      if (reservationClientName && (client.name || client.nombre) && reservationClientName.toLowerCase() === (client.name || client.nombre).toLowerCase()) return true;
       return false;
     }).length;
 
@@ -232,7 +234,7 @@ function renderClientsGrid(clients) {
         <div class="client-header-row">
           <div class="client-avatar">${initials}</div>
           <div class="client-meta-info">
-            <h3 class="client-name-title" title="${client.nombre || "Sin nombre"}">${client.nombre || "Sin nombre"}</h3>
+            <h3 class="client-name-title" title="${client.name || client.nombre || "Sin nombre"}">${client.name || client.nombre || "Sin nombre"}</h3>
             <span class="client-type-badge ${badgeClass}">${typeIcon} ${tipo}</span>
           </div>
         </div>
@@ -240,7 +242,7 @@ function renderClientsGrid(clients) {
         <div class="client-details-list">
           <div class="client-detail-item">
             <span>📱</span>
-            ${cleanPhone ? `<a href="tel:${cleanPhone}"><strong>${client.telefono}</strong></a>` : `<span style="color: #64748b;">Sin teléfono</span>`}
+            ${cleanPhone ? `<a href="tel:${cleanPhone}"><strong>${client.phone || client.telefono}</strong></a>` : `<span style="color: #64748b;">Sin teléfono</span>`}
           </div>
 
           ${client.email ? `
@@ -250,17 +252,17 @@ function renderClientsGrid(clients) {
             </div>
           ` : ""}
 
-          ${client.documento ? `
+          ${client.documentId || client.documento ? `
             <div class="client-detail-item">
               <span>🪪</span>
-              <span>Doc: <strong>${client.documento}</strong></span>
+              <span>Doc: <strong>${client.documentId || client.documento}</strong></span>
             </div>
           ` : ""}
 
-          ${client.direccion ? `
+          ${client.address || client.direccion ? `
             <div class="client-detail-item">
               <span>📍</span>
-              <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${client.direccion}</span>
+              <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${client.address || client.direccion}</span>
             </div>
           ` : ""}
 
@@ -316,12 +318,12 @@ function openModal(client = null) {
   if (client) {
     clientModalTitle.textContent = "Editar Ficha de Cliente";
     clientIdInput.value = client.id;
-    nombreInput.value = client.nombre || "";
-    telefonoInput.value = client.telefono || "";
+    nombreInput.value = client.name || client.nombre || "";
+    telefonoInput.value = client.phone || client.telefono || "";
     emailInput.value = client.email || "";
-    documentoInput.value = client.documento || "";
-    direccionInput.value = client.direccion || "";
-    tipoClienteInput.value = client.tipo_cliente || "Cliente";
+    documentoInput.value = client.documentId || client.documento || "";
+    direccionInput.value = client.address || client.direccion || "";
+    tipoClienteInput.value = client.clientType || client.tipo_cliente || "Cliente";
     saveClientBtn.textContent = "Guardar Cambios";
   } else {
     clientModalTitle.textContent = "Registrar Nuevo Cliente";
@@ -348,15 +350,15 @@ async function handleFormSubmit(e) {
 
   const id = clientIdInput.value;
   const payload = {
-    nombre: nombreInput.value.trim(),
-    telefono: telefonoInput.value.trim(),
+    name: nombreInput.value.trim(),
+    phone: telefonoInput.value.trim(),
     email: emailInput.value.trim(),
-    documento: documentoInput.value.trim(),
-    direccion: direccionInput.value.trim(),
-    tipo_cliente: tipoClienteInput.value || "Cliente"
+    documentId: documentoInput.value.trim(),
+    address: direccionInput.value.trim(),
+    clientType: tipoClienteInput.value || "Cliente"
   };
 
-  if (!payload.nombre || !payload.telefono) {
+  if (!payload.name || !payload.phone) {
     Swal.fire({
       icon: "warning",
       title: "Campos obligatorios",

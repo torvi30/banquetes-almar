@@ -56,10 +56,10 @@ async function cargarSeccionesGaleria() {
     const coverMap = {};
 
     items.forEach((item) => {
-      const cat = item.categoria || "General";
+      const cat = item.category || item.categoria || "General";
       countMap[cat] = (countMap[cat] || 0) + 1;
-      if (!coverMap[cat] || item.es_portada) {
-        coverMap[cat] = item.imagen;
+      if (!coverMap[cat] || item.isCover || item.es_portada) {
+        coverMap[cat] = item.imageUrl || item.imagen;
       }
     });
 
@@ -70,7 +70,7 @@ async function cargarSeccionesGaleria() {
         id: "cat-" + (index + 1),
         nombre,
         total_fotos: countMap[nombre] || 0,
-        portada: coverMap[nombre] || (items[index]?.imagen || "")
+        portada: coverMap[nombre] || (items[index]?.imageUrl || items[index]?.imagen || "")
       };
     });
 

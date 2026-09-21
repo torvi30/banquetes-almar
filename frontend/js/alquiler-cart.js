@@ -32,10 +32,14 @@ export const rentalCart = {
     } else {
       this.items.push({
         id: product.id,
-        nombre: product.nombre,
-        precio: product.precio,
-        unidad: product.unidad,
-        imagen: product.imagen,
+        name: product.name || product.nombre,
+        nombre: product.name || product.nombre,
+        price: Number(product.price ?? product.precio ?? 0),
+        precio: Number(product.price ?? product.precio ?? 0),
+        unit: product.unit || product.unidad,
+        unidad: product.unit || product.unidad,
+        imageUrl: product.imageUrl || product.imagen,
+        imagen: product.imageUrl || product.imagen,
         quantity: qty
       });
     }
@@ -274,14 +278,14 @@ export function initRentalStore() {
       // Guardar también en cotizaciones de Firestore
       try {
         dbService.createQuote({
-          nombre,
-          telefono: "Alquiler Online",
-          evento: `Alquiler de Mobiliario (${municipio})`,
-          personas: rentalCart.getItemCount(),
-          mensaje: `Items solicitados:\n${itemsListText}`,
-          totalEstimado: total,
-          fechaEvento: fecha,
-          origen: "carrito_alquiler"
+          clientName: nombre,
+          phone: "Alquiler Online",
+          eventType: `Alquiler de Mobiliario (${municipio})`,
+          guestCount: rentalCart.getItemCount(),
+          message: `Items solicitados:\n${itemsListText}`,
+          estimatedTotal: total,
+          eventDate: fecha,
+          source: "carrito_alquiler"
         });
       } catch (e) {
         console.warn("No se pudo guardar la cotización preliminar en Firestore:", e);
@@ -334,12 +338,12 @@ async function cargarProductosAlquiler() {
     grid.innerHTML = lista.map(item => `
       <article class="service-card rental-card">
         <div class="service-image-wrap">
-          <img src="${item.imagen}" alt="${item.nombre}" class="service-image" loading="lazy" />
-          <span class="rental-badge">$${item.precio.toLocaleString("es-CO")} / ${item.unidad}</span>
+          <img src="${item.imageUrl || item.imagen}" alt="${item.name || item.nombre}" class="service-image" loading="lazy" />
+          <span class="rental-badge">$${(item.price || item.precio || 0).toLocaleString("es-CO")} / ${item.unit || item.unidad}</span>
         </div>
         <div class="service-content">
-          <h3>${item.nombre}</h3>
-          <p>${item.descripcion}</p>
+          <h3>${item.name || item.nombre}</h3>
+          <p>${item.description || item.descripcion || ''}</p>
           <div class="rental-action-bar">
             <span class="stock-tag">Stock: ${item.stock} disp.</span>
             <button class="btn btn-primary btn-sm add-rental-item-btn" data-id="${item.id}">

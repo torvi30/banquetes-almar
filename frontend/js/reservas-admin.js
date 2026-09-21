@@ -760,17 +760,24 @@ form.addEventListener("submit", async (e) => {
   const observaciones = observacionesInput.value.trim();
 
   const payload = {
-    cliente,
-    telefono,
-    tipo_evento,
-    fecha_evento,
+    clientName: cliente,
+    cliente: cliente,
+    phone: telefono,
+    telefono: telefono,
+    eventType: tipo_evento,
+    tipo_evento: tipo_evento,
+    eventDate: fecha_evento,
+    fecha_evento: fecha_evento,
+    location: lugar || "Salón Almar Marinilla",
     locacion: lugar || "Salón Almar Marinilla",
-    lugar: lugar || "Salón Almar Marinilla",
-    personas,
-    estado,
-    total,
-    valor_total: total,
-    observaciones
+    guestCount: personas,
+    personas: personas,
+    status: estado,
+    estado: estado,
+    totalAmount: total,
+    total: total,
+    notes: observaciones,
+    observaciones: observaciones
   };
 
   try {
@@ -787,8 +794,9 @@ form.addEventListener("submit", async (e) => {
         showConfirmButton: false
       });
     } else {
+      payload.depositAmount = 0;
       payload.anticipo = 0;
-      payload.abono = 0;
+      payload.balanceAmount = total;
       payload.saldo = total;
       await dbService.createReservation(payload);
       Swal.fire({
