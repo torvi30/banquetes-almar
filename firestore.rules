@@ -17,93 +17,148 @@ service cloud.firestore {
       return val is string && val.size() > 0 && val.size() <= 500;
     }
 
-    // 1. CATÁLOGOS PÚBLICOS DE GALA
-    // Lectura abierta para clientes y visitantes en la web.
-    // Escritura, actualización y eliminación exclusivas para el Administrador.
+    // 1. PUBLIC GALA CATALOGS & PORTFOLIO
+    // Public read for website visitors.
+    // Write, update, and delete restricted to authenticated administrators.
+    match /packages/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
     match /paquetes/{document} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
+    match /services/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
     match /servicios/{document} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
+    match /inventory/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
     match /inventario/{document} {
       allow read: if true;
       allow write: if isAdmin();
     }
-
     match /mobiliario_alquiler/{document} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
+    match /gallery/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
     match /galeria/{document} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
+    match /announcements/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
     match /anuncio/{document} {
       allow read: if true;
       allow write: if isAdmin();
     }
-
     match /anuncios/{document} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // 2. CAPTACIÓN DE CLIENTES (COTIZACIONES & LEAD CRM)
-    // Cualquier visitante puede enviar una cotización si proporciona nombre y teléfono.
-    // Solo administradores pueden listar, auditar, modificar estados o eliminar.
-    match /cotizaciones/{document} {
-      allow create: if request.resource.data.keys().hasAll(['nombre', 'telefono'])
+    // 2. LEAD GENERATION & WEB QUOTES (CRM)
+    // Any visitor can submit a quote request with valid client name & phone number.
+    // Read, update, and deletion restricted to administrators.
+    match /quotes/{document} {
+      allow create: if (request.resource.data.keys().hasAll(['clientName', 'phone'])
+                    && isNonEmptyString(request.resource.data.clientName)
+                    && isNonEmptyString(request.resource.data.phone))
+                    || (request.resource.data.keys().hasAll(['nombre', 'telefono'])
                     && isNonEmptyString(request.resource.data.nombre)
-                    && isNonEmptyString(request.resource.data.telefono);
+                    && isNonEmptyString(request.resource.data.telefono));
+      allow read, update, delete: if isAdmin();
+    }
+    match /cotizaciones/{document} {
+      allow create: if (request.resource.data.keys().hasAll(['clientName', 'phone'])
+                    && isNonEmptyString(request.resource.data.clientName)
+                    && isNonEmptyString(request.resource.data.phone))
+                    || (request.resource.data.keys().hasAll(['nombre', 'telefono'])
+                    && isNonEmptyString(request.resource.data.nombre)
+                    && isNonEmptyString(request.resource.data.telefono));
       allow read, update, delete: if isAdmin();
     }
 
-    // 3. OPERACIÓN Y AGENDA DE RESERVAS
-    // Lectura individual (get) permitida con ID específico para portal VIP de clientes y contratos.
-    // Listado masivo (list), creación y edición restringidos a administradores.
+    // 3. EVENT RESERVATIONS & BOOKINGS
+    // Single document read (get) permitted with ID for client VIP portal & contract inspection.
+    // List, create, update, delete strictly restricted to administrators.
+    match /reservations/{document} {
+      allow get: if true;
+      allow list, create, update, delete: if isAdmin();
+    }
     match /reservas/{document} {
       allow get: if true;
       allow list, create, update, delete: if isAdmin();
     }
-
+    match /events/{document} {
+      allow get: if true;
+      allow list, create, update, delete: if isAdmin();
+    }
     match /eventos/{document} {
       allow get: if true;
       allow list, create, update, delete: if isAdmin();
     }
 
-    // 4. TESORERÍA, ABONOS Y PAGOS
-    // Lectura individual (get) permitida con ID de comprobante.
-    // Creación permitida para administradores o reportes con monto numérico positivo.
-    // Listado general de cartera y modificaciones restringidos a administradores.
+    // 4. PAYMENTS & FINANCIAL TRANSACTIONS
+    // Single document read (get) permitted with receipt ID.
+    // Creation permitted for admins or valid payment reports with positive amount.
+    // General listing and ledger edits restricted to administrators.
+    match /payments/{document} {
+      allow get: if true;
+      allow create: if isAdmin() || (
+        (request.resource.data.keys().hasAll(['amount', 'clientName'])
+        && request.resource.data.amount is number
+        && request.resource.data.amount > 0)
+        || (request.resource.data.keys().hasAll(['monto', 'cliente'])
+        && request.resource.data.monto is number
+        && request.resource.data.monto > 0)
+      );
+      allow list, update, delete: if isAdmin();
+    }
     match /pagos/{document} {
       allow get: if true;
       allow create: if isAdmin() || (
-        request.resource.data.keys().hasAll(['monto', 'cliente'])
+        (request.resource.data.keys().hasAll(['amount', 'clientName'])
+        && request.resource.data.amount is number
+        && request.resource.data.amount > 0)
+        || (request.resource.data.keys().hasAll(['monto', 'cliente'])
         && request.resource.data.monto is number
-        && request.resource.data.monto > 0
+        && request.resource.data.monto > 0)
       );
       allow list, update, delete: if isAdmin();
     }
 
-    // 5. PRIVACIDAD TOTAL: DIRECTORIO DE CLIENTES (CRM CONFIDENCIAL)
-    // Cédulas, correos, domicilios y teléfonos protegidos contra accesos públicos.
+    // 5. CONFIDENTIAL CLIENT DIRECTORY (CRM)
+    // Protected against public exposure.
+    match /clients/{document} {
+      allow read, write: if isAdmin();
+    }
     match /clientes/{document} {
       allow read, write: if isAdmin();
     }
 
-    // 6. PERFILES DE ADMINISTRADORES
+    // 6. ADMIN PROFILES
     match /admins/{document} {
       allow read, write: if isAdmin();
     }
 
-    // 7. BLOQUEO POR DEFECTO: Denegar cualquier otra colección o documento no declarado
+    // 7. DEFAULT LOCKDOWN: Deny any undeclared collections
     match /{document=**} {
       allow read, write: if false;
     }

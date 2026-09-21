@@ -409,6 +409,112 @@ const SERVICES_DATA = [
   }
 ];
 
+// 8. PAQUETES DE GALA (PACKAGES)
+const PACKAGES_DATA = [
+  {
+    id: "boda-almar-imperial",
+    title: "Boda Almar Imperial (Todo Incluido)",
+    category: "bodas",
+    badge: "Más Solicitado",
+    description: "La experiencia nupcial definitiva. Salón o montaje en finca, banquete a 3 tiempos, decoración floral de alta gama y producción técnica completa.",
+    pricePerPerson: 115000,
+    minGuests: 50,
+    imageUrl: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80",
+    inclusions: [
+      "Salón privado Almar o montaje en finca del Oriente Antioqueño",
+      "Menú de gala a 3 tiempos con degustación previa para novios",
+      "Sillas Tiffany (doradas o blancas) con cojinería de lujo y mesas vestidas",
+      "Decoración floral integral: arco nupcial, centros de mesa y camino de flores",
+      "Sonido profesional, cabezas móviles, luces vintage y DJ en vivo por 6 horas",
+      "Brindis con champaña y cristalería de lujo para todos los invitados",
+      "Meseros uniformados, barman, chef y coordinador general del evento"
+    ]
+  },
+  {
+    id: "quinceanera-encanto",
+    title: "Quinceañera Mágica & Glam",
+    category: "quince",
+    badge: "Juvenil & Elegante",
+    description: "Una celebración inolvidable pensada para destacar a la quinceañera con efectos especiales, pista LED para el vals y ambientación temática.",
+    pricePerPerson: 95000,
+    minGuests: 40,
+    imageUrl: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1200&q=80",
+    inclusions: [
+      "Decoración temática de impacto: backing fotográfico y letras luminosas XV",
+      "Banquete gourmet a 2 tiempos + estación de mesa de postres",
+      "Pista de baile LED para el protocolo del vals y fiesta",
+      "Show de luces robóticas, máquina de humo y animación DJ",
+      "Mobiliario de lujo, vajilla formal y cristalería",
+      "Cócteles de bienvenida (con y sin licor) y brindis protocolario",
+      "Personal completo de servicio y atención personalizada"
+    ]
+  },
+  {
+    id: "grados-prom",
+    title: "Grados & Promociones Soñadas",
+    category: "grados",
+    badge: "Celebración Exclusiva",
+    description: "El cierre de ciclo perfecto para colegios y universidades con protocolo de toga, cena de gala, brindis y fiesta inolvidable.",
+    pricePerPerson: 78000,
+    minGuests: 35,
+    imageUrl: "https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&w=1200&q=80",
+    inclusions: [
+      "Salón acondicionado con tarima protocolaria para entrega de diplomas",
+      "Cena formal a la mesa con bebida y postre",
+      "Copa de vino o champaña para el brindis de honor",
+      "Sonido envolvente para discursos y DJ para la hora de fiesta",
+      "Mobiliario formal y mantelería elegante",
+      "Personal de protocolo y servicio a la mesa"
+    ]
+  },
+  {
+    id: "comunion-bautizo",
+    title: "Primera Comunión & Bautizo Celestial",
+    category: "sociales",
+    badge: "Familiar & Acogedor",
+    description: "Ambiente cálido, decoración en blanco y dorado o tonos pastel, mesa de dulces angelical y menú delicioso para toda la familia.",
+    pricePerPerson: 68000,
+    minGuests: 30,
+    imageUrl: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=1200&q=80",
+    inclusions: [
+      "Montaje angelical con detalles en dorado, follaje natural y flores frescas",
+      "Almuerzo o cena campestre balanceada para adultos y niños",
+      "Mesa de dulces decorada con figuras temáticas",
+      "Mobiliario cómodo con mantelería y centros de mesa florales",
+      "Atención de meseros y ambientación musical suave"
+    ]
+  },
+  {
+    id: "corporativo-almar",
+    title: "Eventos Corporativos & Fin de Año",
+    category: "corporativo",
+    badge: "Empresarial",
+    description: "Asambleas, integraciones, conferencias y fiestas de fin de año con tecnología audiovisual, estación de café y banquete ejecutivo.",
+    pricePerPerson: 82000,
+    minGuests: 30,
+    imageUrl: "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1200&q=80",
+    inclusions: [
+      "Equipos audiovisuales: pantalla, videoproyector y micrófonos inalámbricos",
+      "Estación permanente de café gourmet, aromáticas y pasabocas",
+      "Almuerzo corporativo o cena de gala buffet",
+      "Disposición en auditorio, herradura o mesas redondas",
+      "Espacio amplio con accesibilidad universal en Marinilla"
+    ]
+  }
+];
+
+// 9. ANUNCIO SUPERIOR
+const ANNOUNCEMENT_DATA = {
+  id: "top_banner",
+  isActive: true,
+  icon: "✨",
+  title: "Agenda Temporada 2026-2027:",
+  message: "Reserva tu fecha especial con degustación exclusiva para novios y quinceañeras.",
+  badge: "Oriente Antioqueño",
+  subtext: "Marinilla · El Peñol · Rionegro",
+  updatedAt: new Date().toISOString()
+};
+
 async function runMigration() {
   try {
     console.log("\n🔐 Autenticando con Firebase Auth como Administrador...");
@@ -469,7 +575,12 @@ async function runMigration() {
         balanceAmount: res.saldo,
         status: res.estado,
         notes: res.observaciones,
-        rentalItems: res.items_mobiliario || [],
+        rentalItems: (res.items || []).map(it => ({
+          inventoryId: it.inventario_id || it.inventoryId || "",
+          name: it.nombre || it.name || "",
+          quantity: it.cantidad || it.quantity || 0,
+          unitPrice: it.precio_unitario || it.unitPrice || 0
+        })),
         createdAt: res.createdAt || new Date().toISOString()
       };
       await setDoc(doc(db, "reservations", clean.id), clean, { merge: true });
@@ -530,10 +641,48 @@ async function runMigration() {
     }
     console.log(`   ✅ ${GALLERY_DATA.length} montajes de galería migrados a colección 'gallery'.`);
 
+    console.log("\n🛠️ 7. Migrando Catálogo de Servicios...");
+    for (const srv of SERVICES_DATA) {
+      const clean = {
+        id: srv.id,
+        name: srv.titulo,
+        category: srv.categoria,
+        imageUrl: srv.imagen,
+        description: srv.descripcion,
+        isFeatured: srv.destacado === true,
+        createdAt: srv.createdAt || new Date().toISOString()
+      };
+      await setDoc(doc(db, "services", clean.id), clean, { merge: true });
+    }
+    console.log(`   ✅ ${SERVICES_DATA.length} servicios migrados a colección 'services'.`);
+
+    console.log("\n🎁 8. Migrando Paquetes de Gala...");
+    for (const pkg of PACKAGES_DATA) {
+      const clean = {
+        id: pkg.id,
+        title: pkg.title,
+        category: pkg.category,
+        badge: pkg.badge,
+        description: pkg.description,
+        pricePerPerson: pkg.pricePerPerson,
+        minGuests: pkg.minGuests,
+        imageUrl: pkg.imageUrl,
+        inclusions: pkg.inclusions,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      await setDoc(doc(db, "packages", clean.id), clean, { merge: true });
+    }
+    console.log(`   ✅ ${PACKAGES_DATA.length} paquetes de gala migrados a colección 'packages'.`);
+
+    console.log("\n📢 9. Migrando Anuncio Superior Oficial...");
+    await setDoc(doc(db, "announcements", ANNOUNCEMENT_DATA.id), ANNOUNCEMENT_DATA, { merge: true });
+    console.log(`   ✅ Anuncio superior institucional migrado a 'announcements'.`);
+
     console.log("\n===============================================================");
     console.log("🎉 ¡MIGRACIÓN A FIREBASE FIRESTORE COMPLETADA CON ÉXITO!");
     console.log("   Todas las tablas SQL han sido convertidas a documentos NoSQL.");
-    console.log("   Tu base de datos ahora reside 100% en Firebase Cloud Firestore.");
+    console.log("   Tu base de datos ahora reside 100% en Firebase Cloud Firestore (Esquema en Inglés).");
     console.log("===============================================================");
     process.exit(0);
   } catch (error) {
