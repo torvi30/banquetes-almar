@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Administrar Paquetes Todo Incluido | Banquetes Almar</title>
+  <link rel="icon" type="image/png" href="../images/logo-almar.png" />
+  <link rel="apple-touch-icon" href="../images/logo-almar.png" />
+  <meta name="theme-color" content="#0b0b0b" />
+  
+  <!-- Fuentes Google -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="../css/tailwind.css" />
+</head>
+<body>
+  <header id="adminNavbar"></header>
+
+  <section class="section admin-panel">
+    <div class="container">
+      <div class="section-heading">
+        <span class="section-label">💎 Panel de Control de Gala</span>
+        <h2>Administrar Paquetes Todo Incluido</h2>
+        <p>Crea, edita y publica las experiencias completas de bodas, quinceañeras y grados. Todo cambio se refleja al instante en la landing page del cliente.</p>
+      </div>
+
+      <!-- PESTAÑAS CATÁLOGO WEB: GALERÍA VS PAQUETES VS SERVICIOS VS ANUNCIO -->
+      <div class="catalog-tabs-bar">
+        <a href="./galeria.html?v=20260908.2" class="catalog-tab-btn">📸 Galería de Gala</a>
+        <a href="./paquetes.html?v=20260908.2" class="catalog-tab-btn active">💎 Paquetes Todo Incluido</a>
+        <a href="./servicios.html?v=20260908.2" class="catalog-tab-btn">🛎️ Servicios & Banquetería</a>
+        <a href="./anuncio.html" class="catalog-tab-btn">📢 Franja de Anuncio Web</a>
+      </div>
+
+      <!-- TARJETAS RESUMEN DE PAQUETES -->
+      <div class="admin-summary mb-8">
+        <div class="summary-card">
+          <span class="summary-title">💎 Paquetes Activos</span>
+          <strong id="kpiTotalPackages">0</strong>
+        </div>
+        <div class="summary-card">
+          <span class="summary-title">💰 Inversión Promedio / Invitado</span>
+          <strong id="kpiAvgPrice">$0</strong>
+        </div>
+        <div class="summary-card">
+          <span class="summary-title">👑 Ocasiones Cubiertas</span>
+          <strong id="kpiCategories">0</strong>
+        </div>
+        <div class="summary-card">
+          <span class="summary-title">🌐 Conexión Landing Page</span>
+          <strong class="text-[#25d366] text-xl">En Vivo ⚡</strong>
+        </div>
+      </div>
+
+      <!-- FORMULARIO DE CREACIÓN / EDICIÓN DE PAQUETE -->
+      <div class="dashboard-panel mb-10 bg-[#121216] border border-white/10 rounded-2xl p-8">
+        <div class="dashboard-panel-head flex justify-between items-center mb-6 border-b border-white/10 pb-4">
+          <div>
+            <p class="dashboard-mini-label text-amber-300 text-xs uppercase tracking-wider mb-1">Editor de Experiencias</p>
+            <h3 id="packageFormTitle" class="font-serif text-2xl text-white m-0">Agregar Nuevo Paquete de Gala</h3>
+          </div>
+          <a href="../index.html#paquetes" target="_blank" class="btn btn-secondary text-sm px-4 py-2">
+            👁️ Ver en Landing Page
+          </a>
+        </div>
+
+        <form id="packageForm" class="quote-form">
+          <input type="hidden" id="packageId" />
+          <input type="hidden" id="packageCurrentImage" />
+
+          <!-- TÍTULO Y CATEGORÍA -->
+          <div class="form-group">
+            <label for="pkgTitulo" class="text-white font-semibold">Título del Paquete *</label>
+            <input type="text" id="pkgTitulo" placeholder="Ej: Boda Almar Imperial (Todo Incluido)" required />
+          </div>
+
+          <div class="form-group">
+            <label for="pkgCategoria" class="text-white font-semibold">Categoría / Ocasión *</label>
+            <select id="pkgCategoria" required>
+              <option value="bodas">💍 Bodas de Ensueño</option>
+              <option value="quince">👑 Quince Años & Glam</option>
+              <option value="grados">🎓 Grados & Promociones</option>
+              <option value="corporativo">👔 Eventos Empresariales</option>
+              <option value="social">🕊️ Primera Comunión / Bautizo</option>
+              <option value="familiar">🥂 Fiestas & Aniversarios</option>
+            </select>
+          </div>
+
+          <!-- BADGE Y PRECIO -->
+          <div class="form-group">
+            <label for="pkgBadge" class="text-white font-semibold">Insignia / Badge de Portada</label>
+            <input type="text" id="pkgBadge" placeholder="Ej: Más Solicitado, Juvenil & Elegante, VIP" />
+            <small class="text-white/60 text-xs">Texto flotante sobre la foto en la tarjeta (ej: Más Solicitado)</small>
+          </div>
+
+          <div class="form-group">
+            <label for="pkgPrecio" class="text-white font-semibold">Precio por Persona / Invitado (COP) *</label>
+            <input type="number" id="pkgPrecio" placeholder="Ej: 115000" min="10000" step="1000" required />
+            <small id="priceFormattedPreview" class="text-amber-300 text-xs font-semibold">$0 COP / persona</small>
+          </div>
+
+          <!-- MÍNIMO DE INVITADOS -->
+          <div class="form-group">
+            <label for="pkgMinPersonas" class="text-white font-semibold">Mínimo de Invitados Sugerido</label>
+            <input type="number" id="pkgMinPersonas" placeholder="Ej: 50" min="10" value="40" />
+          </div>
+
+          <!-- FOTOGRAFÍA -->
+          <div class="form-group">
+            <label for="pkgImagenUrl" class="text-white font-semibold">URL de Fotografía de Gala</label>
+            <input type="url" id="pkgImagenUrl" placeholder="https://images.unsplash.com/..." />
+          </div>
+
+          <div class="form-group full-width">
+            <label class="text-white font-semibold">O sube una imagen desde tu dispositivo / Elige foto sugerida</label>
+            <div class="flex gap-4 items-center flex-wrap mb-2">
+              <input type="file" id="pkgImageFile" accept="image/*" class="max-w-[300px]" />
+              <span class="text-white/60 text-sm">O selecciona una foto recomendada:</span>
+            </div>
+            
+            <div class="quick-preset-photos" id="presetPhotosBar">
+              <img src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80" alt="Boda Imperial" class="preset-photo-thumb" title="Boda de Gala" />
+              <img src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=800&q=80" alt="Quinceañera Glam" class="preset-photo-thumb" title="Quinceañera & Pista" />
+              <img src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80" alt="Salón Elegante" class="preset-photo-thumb" title="Salón con Luces" />
+              <img src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80" alt="Banquete Gourmet" class="preset-photo-thumb" title="Catering 3 Tiempos" />
+              <img src="https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=800&q=80" alt="Boda Campestre" class="preset-photo-thumb" title="Finca Campestre" />
+              <img src="https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=800&q=80" alt="Grados & Prom" class="preset-photo-thumb" title="Grados & Fiesta" />
+            </div>
+
+            <div id="pkgPreviewWrap" class="mt-4 hidden">
+              <div class="w-full max-w-[360px] h-[210px] rounded-2xl overflow-hidden relative border border-white/10 shadow-2xl shadow-black/50">
+                <img id="pkgImagePreview" src="" alt="Previsualización" class="w-full h-full object-cover" />
+                <span id="pkgBadgePreview" class="package-badge absolute top-3 right-3 bg-gradient-to-r from-amber-300 to-amber-500 text-stone-950 font-bold text-xs px-2.5 py-1 rounded-full">Vista Previa</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- DESCRIPCIÓN -->
+          <div class="form-group full-width">
+            <label for="pkgDescripcion" class="text-white font-semibold">Descripción Comercial del Paquete *</label>
+            <textarea id="pkgDescripcion" rows="3" placeholder="Describe brevemente el alcance del paquete, atmósfera, tipo de montaje..." required></textarea>
+          </div>
+
+          <!-- GESTOR DINÁMICO DE INCLUSIONES -->
+          <div class="form-group full-width">
+            <label class="text-white font-semibold">Inclusiones del Paquete (Lo que incluye el todo incluido) *</label>
+            <div class="package-inclusions-manager">
+              <div class="flex gap-3 mb-3 flex-wrap">
+                <input type="text" id="newInclusionInput" placeholder="Ej: Menú de gala a 3 tiempos con degustación previa..." class="flex-1 min-w-[250px]" />
+                <button type="button" class="btn btn-secondary whitespace-nowrap" id="addInclusionBtn">
+                  ➕ Agregar Inclusión
+                </button>
+              </div>
+
+              <div id="inclusionsList" class="min-h-[40px] py-2">
+                <!-- Etiquetas de inclusiones añadidas dinámicamente -->
+              </div>
+              <small class="text-white/60 text-xs">
+                💡 Las primeras 4 inclusiones se muestran destacadas con viñetas en la tarjeta de la landing page.
+              </small>
+            </div>
+          </div>
+
+          <!-- BOTONES DE ACCIÓN -->
+          <div class="form-group full-width event-form-actions mt-4 flex gap-4">
+            <button type="submit" class="btn btn-primary px-8 py-3.5 text-base" id="savePackageBtn">
+              💾 Guardar y Publicar Paquete
+            </button>
+            <button type="button" class="btn btn-secondary hidden px-6 py-3.5" id="cancelEditPkgBtn">
+              Cancelar Edición
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- LISTADO DE PAQUETES PUBLICADOS EN LA WEB -->
+      <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+        <div>
+          <h3 class="text-white font-serif text-3xl m-0 mb-1">
+            Paquetes Publicados en la Landing Page
+          </h3>
+          <p class="text-white/60 text-sm m-0" id="packagesCount">
+            Cargando catálogo...
+          </p>
+        </div>
+
+        <div class="flex gap-3 flex-wrap items-center">
+          <input type="text" id="searchPkgInput" placeholder="🔍 Buscar paquete..." class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-amber-400" />
+          
+          <select id="filterPkgCat" class="px-4 py-2 rounded-full bg-stone-900 border border-white/10 text-white text-sm outline-none focus:border-amber-400">
+            <option value="todos">Todas las ocasiones</option>
+            <option value="bodas">💍 Bodas</option>
+            <option value="quince">👑 Quince Años</option>
+            <option value="grados">🎓 Grados</option>
+            <option value="corporativo">👔 Corporativo</option>
+            <option value="social">🕊️ Comunión / Bautizo</option>
+          </select>
+
+          <button type="button" class="btn btn-secondary text-xs px-4 py-2 border-amber-400/40" id="resetDefaultsBtn" title="Restablece los 3 paquetes iniciales originales">
+            🔄 Restablecer Plantillas
+          </button>
+        </div>
+      </div>
+
+      <!-- CUADRÍCULA DE TARJETAS DE PAQUETES (ESTILO IDÉNTICO A LA WEB DEL CLIENTE) -->
+      <div id="packagesAdminGrid" class="packages-grid mt-4">
+        <!-- Renderizado dinámico desde db.js -->
+      </div>
+    </div>
+  </section>
+
+  <!-- SweetAlert2 para diálogos de gala -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script type="module" src="../js/components/admin-navbar.js"></script>
+  <!-- Lógica modular del panel -->
+  <script type="module" src="../js/paquetes-admin.js?v=20260908.1"></script>
+</body>
+</html>

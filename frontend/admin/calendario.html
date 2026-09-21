@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calendario | Banquetes Almar</title>
+  <link rel="stylesheet" href="../css/tailwind.css" />
+  <script>
+    window.location.replace("./reservas.html?tab=calendario");
+  </script>
+</head>
+<body>
+  <header id="adminNavbar"></header>
+
+  <section class="section admin-panel">
+    <div class="container">
+      <div class="section-heading">
+        <p class="section-label">Panel Admin</p>
+        <h2>Calendario general</h2>
+        <p>Redirigiendo a la vista unificada de eventos y agenda...</p>
+      </div>
+
+      <div class="calendar-legend">
+        <span class="legend-item"><span class="legend-dot legend-reserva"></span> Reserva</span>
+        <span class="legend-item"><span class="legend-dot legend-evento"></span> Evento</span>
+        <span class="legend-item"><span class="legend-dot legend-pendiente"></span> Pendiente</span>
+        <span class="legend-item"><span class="legend-dot legend-confirmada"></span> Confirmado / Confirmada</span>
+        <span class="legend-item"><span class="legend-dot legend-cancelada"></span> Cancelado / Cancelada</span>
+        <span class="legend-item"><span class="legend-dot legend-convertida"></span> Convertido / En proceso</span>
+      </div>
+
+      <div class="calendar-toolbar">
+        <button id="prevMonth" class="btn btn-secondary" type="button">◀</button>
+        <h3 id="monthTitle" class="calendar-month-title"></h3>
+        <button id="nextMonth" class="btn btn-secondary" type="button">▶</button>
+      </div>
+
+      <div class="calendar-weekdays">
+        <div>Dom</div>
+        <div>Lun</div>
+        <div>Mar</div>
+        <div>Mié</div>
+        <div>Jue</div>
+        <div>Vie</div>
+        <div>Sáb</div>
+      </div>
+
+      <div id="calendarGrid" class="calendar-grid-pro"></div>
+    </div>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script type="module" src="../js/components/admin-navbar.js"></script>
+</body>
+</html>

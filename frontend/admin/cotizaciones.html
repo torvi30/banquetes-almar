@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cotizaciones | Banquetes Almar</title>
+  <link rel="icon" type="image/png" href="../images/logo-almar.png" />
+  <link rel="apple-touch-icon" href="../images/logo-almar.png" />
+  <meta name="theme-color" content="#0b0b0b" />
+  <link rel="stylesheet" href="../css/tailwind.css" />
+</head>
+<body>
+  <header id="adminNavbar"></header>
+
+  <section class="section admin-panel">
+    <div class="container">
+      <div class="section-heading">
+        <p class="section-label">Panel Admin</p>
+        <h2>Tablero de cotizaciones</h2>
+        <p>Gestiona cotizaciones y reservas sin llenar el dashboard principal.</p>
+      </div>
+
+      <!-- METRICAS DE PIPELINE CRM -->
+      <div class="pipeline-metrics-banner">
+        <div class="pipeline-metric-card">
+          <span class="pipeline-metric-label">📋 Total Cotizaciones</span>
+          <strong id="metricTotalQuotes" class="pipeline-metric-val">0</strong>
+        </div>
+
+        <div class="pipeline-metric-card">
+          <span class="pipeline-metric-label">💰 Valor en Pipeline</span>
+          <strong id="metricPipelineValue" class="pipeline-metric-val highlight-gold">$0</strong>
+        </div>
+
+        <div class="pipeline-metric-card">
+          <span class="pipeline-metric-label">⚡ Por Contactar</span>
+          <strong id="metricNewQuotes" class="pipeline-metric-val text-amber-500">0</strong>
+        </div>
+
+        <div class="pipeline-metric-card">
+          <span class="pipeline-metric-label">🏆 Convertidas a Reserva</span>
+          <strong id="metricConverted" class="pipeline-metric-val text-emerald-500">0</strong>
+        </div>
+      </div>
+
+      <!-- BARRA DE HERRAMIENTAS -->
+      <div class="cotizaciones-toolbar">
+        <div class="form-group">
+          <label for="searchInput">Buscar en tablero</label>
+          <input type="text" id="searchInput" placeholder="Buscar por cliente, teléfono, locación o evento..." />
+        </div>
+
+        <div class="form-group">
+          <label for="filterOrigen">Canal de origen</label>
+          <select id="filterOrigen">
+            <option value="">Todos los canales</option>
+            <option value="cotizacion">Cotizador Web</option>
+            <option value="carrito_alquiler">Mobiliario / Alquiler</option>
+            <option value="reserva">Reservas Directas</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="filterOrden">Ordenar por</label>
+          <select id="filterOrden">
+            <option value="proxima" selected>📅 Fecha más próxima</option>
+            <option value="reciente">⚡ Más recientes primero</option>
+            <option value="mayor_presupuesto">💰 Mayor presupuesto</option>
+          </select>
+        </div>
+
+        <div class="flex gap-2 self-end">
+          <button id="btnRefreshBoard" class="btn btn-secondary px-3.5 py-2.5 text-xs" title="Recargar tablero">
+            🔄 Refrescar
+          </button>
+        </div>
+      </div>
+
+      <!-- TABLERO KANBAN DRAG & DROP -->
+      <div class="pipeline-board">
+        <!-- COLUMNA 1: NUEVOS -->
+        <section class="pipeline-column" data-status="nuevo">
+          <div class="pipeline-column-head">
+            <div class="pipeline-column-title">
+              <span class="pipeline-status-dot bg-amber-500 text-amber-500"></span>
+              <h3>Nuevos / Pendientes</h3>
+            </div>
+            <span id="countNuevos" class="pipeline-count">0</span>
+          </div>
+          <div id="colNuevos" class="pipeline-list" data-status="nuevo"></div>
+        </section>
+
+        <!-- COLUMNA 2: CONTACTADOS -->
+        <section class="pipeline-column" data-status="contactado">
+          <div class="pipeline-column-head">
+            <div class="pipeline-column-title">
+              <span class="pipeline-status-dot bg-sky-500 text-sky-500"></span>
+              <h3>En Seguimiento</h3>
+            </div>
+            <span id="countContactados" class="pipeline-count">0</span>
+          </div>
+          <div id="colContactados" class="pipeline-list" data-status="contactado"></div>
+        </section>
+
+        <!-- COLUMNA 3: CONVERTIDOS -->
+        <section class="pipeline-column" data-status="convertido">
+          <div class="pipeline-column-head">
+            <div class="pipeline-column-title">
+              <span class="pipeline-status-dot bg-emerald-500 text-emerald-500"></span>
+              <h3>Convertidos a Reserva</h3>
+            </div>
+            <span id="countConvertidos" class="pipeline-count">0</span>
+          </div>
+          <div id="colConvertidos" class="pipeline-list" data-status="convertido"></div>
+        </section>
+
+        <!-- COLUMNA 4: CANCELADOS -->
+        <section class="pipeline-column" data-status="cancelado">
+          <div class="pipeline-column-head">
+            <div class="pipeline-column-title">
+              <span class="pipeline-status-dot bg-slate-500 text-slate-500"></span>
+              <h3>Cancelados</h3>
+            </div>
+            <span id="countCancelados" class="pipeline-count">0</span>
+          </div>
+          <div id="colCancelados" class="pipeline-list" data-status="cancelado"></div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script type="module" src="../js/components/admin-navbar.js"></script>
+  <script type="module" src="../js/cotizaciones-admin.js?v=20260907.6"></script>
+</body>
+</html>

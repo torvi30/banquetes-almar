@@ -1,0 +1,1166 @@
+/**
+ * Servicio de Base de Datos para Banquetes Almar (Marinilla, Antioquia).
+ * 
+ * Conexión en vivo con Firebase Cloud Firestore (Proyecto: banquetes-almar).
+ * Con arquitectura híbrida: escribe en Firestore y mantiene sincronización
+ * local para velocidad instantánea y soporte offline.
+ */
+
+import { firebaseConfig, isFirebaseConfigured } from "./config.js";
+import { ENV } from "./env.js";
+import { DEFAULT_ANNOUNCEMENT } from "../config/business-info.js";
+
+// Storage keys with configurable prefix from environment
+const storagePrefix = ENV?.STORAGE_KEY_PREFIX || "almar_";
+const STORAGE_KEYS = {
+  PACKAGES: `${storagePrefix}paquetes`,
+  RENTAL: `${storagePrefix}mobiliario`,
+  QUOTES: `${storagePrefix}cotizaciones`,
+  RESERVATIONS: `${storagePrefix}reservas`,
+  EVENTS: `${storagePrefix}eventos`,
+  PAYMENTS: `${storagePrefix}pagos`,
+  CLIENTS: `${storagePrefix}clientes`,
+  GALLERY: `${storagePrefix}galeria`,
+  GALLERY_CATEGORIES: `${storagePrefix}galeria_categorias`,
+  SERVICES: `${storagePrefix}servicios`,
+  INVENTORY_CATEGORIES: `${storagePrefix}inventario_categorias`,
+  ANNOUNCEMENT: `${storagePrefix}anuncio_superior`
+};
+
+// Initial store setup if local storage is empty
+function initLocalStore() {
+  if (typeof localStorage === "undefined") return;
+
+  if (!localStorage.getItem(STORAGE_KEYS.PACKAGES)) {
+    localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify([]));
+  }
+  if (!localStorage.getItem(STORAGE_KEYS.RENTAL)) {
+    localStorage.setItem(STORAGE_KEYS.RENTAL, JSON.stringify([]));
+  }
+  if (!localStorage.getItem(STORAGE_KEYS.ANNOUNCEMENT)) {
+    localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENT, JSON.stringify(DEFAULT_ANNOUNCEMENT));
+  }
+  if (!localStorage.getItem(STORAGE_KEYS.QUOTES)) {
+    localStorage.setItem(STORAGE_KEYS.QUOTES, JSON.stringify([]));
+  }
+  if (!localStorage.getItem(STORAGE_KEYS.RESERVATIONS)) {
+    localStorage.setItem(STORAGE_KEYS.RESERVATIONS, JSON.stringify([]));
+  }
+  if (!localStorage.getItem(STORAGE_KEYS.PAYMENTS)) {
+    localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify([]));
+  }
+  }
+  if (!localStorage.getItem(STORAGE_KEYS.GALLERY_CATEGORIES)) {
+    const initialCategories = [
+      "Bodas",
+      "15 Años",
+      "Salón Marinilla",
+      "Finca El Peñol",
+      "Mobiliario",
+      "Catering",
+      "Eventos Corporativos"
+    ];
+    localStorage.setItem(STORAGE_KEYS.GALLERY_CATEGORIES, JSON.stringify(initialCategories));
+  }
+  if (!localStorage.getItem(STORAGE_KEYS.GALLERY)) {
+    const initialGallery = [
+      {
+        id: "gal-1",
+        titulo: "Boda Romántica en Salón Almar",
+        categoria: "Bodas",
+        imagen: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80",
+        descripcion: "Montaje de gala con centros florales altos e iluminación cálida."
+      },
+      {
+        id: "gal-2",
+        titulo: "Ceremonia Campestre en El Peñol",
+        categoria: "Finca El Peñol",
+        imagen: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=1200&q=80",
+        descripcion: "Jardines campestres frente a la represa y quiosco iluminado."
+      },
+      {
+        id: "gal-3",
+        titulo: "Quince Años de Ensueño",
+        categoria: "15 Años",
+        imagen: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1200&q=80",
+        descripcion: "Efectos especiales, pista LED y backing floral."
+      },
+      {
+        id: "gal-4",
+        titulo: "Cena de Gala y Alta Cocina",
+        categoria: "Catering",
+        imagen: "https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=1200&q=80",
+        descripcion: "Servicio gourmet a 3 tiempos con emplatado de autor."
+      },
+      {
+        id: "gal-5",
+        titulo: "Montaje Tiffany y Salas Lounge",
+        categoria: "Mobiliario",
+        imagen: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=1200&q=80",
+        descripcion: "Silletería dorada y mobiliario de alquiler de alta gama."
+      },
+      {
+        id: "gal-6",
+        titulo: "Gran Salón de Gala Marinilla",
+        categoria: "Salón Marinilla",
+        imagen: "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=1200&q=80",
+        descripcion: "Capacidad para 200 personas con acústica profesional y chandeliers."
+      },
+      {
+        id: "gal-7",
+        titulo: "Estación de Cóctel & Pasabocas",
+        categoria: "Catering",
+        imagen: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80",
+        descripcion: "Recepción de bienvenida con bocados gourmet y coctelería."
+      },
+      {
+        id: "gal-8",
+        titulo: "Mesa Dulce & Repostería Fina",
+        categoria: "Catering",
+        imagen: "https://images.unsplash.com/photo-1535141192574-5d4897c13136?auto=format&fit=crop&w=1200&q=80",
+        descripcion: "Postres de bocado, macarons, shots dulces y torta ceremonial."
+      }
+    ];
+    localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(initialGallery));
+  }
+
+  if (!localStorage.getItem(STORAGE_KEYS.CLIENTS)) {
+    const initialClients = [
+      {
+        id: "cli-101",
+        nombre: "Mariana Gómez",
+        telefono: "3145678901",
+        email: "mariana.gomez@gmail.com",
+        documento: "1038412991",
+        direccion: "Calle 30 # 29-15, Marinilla",
+        tipo_cliente: "Cliente",
+        createdAt: new Date(Date.now() - 86400000 * 5).toISOString()
+      },
+      {
+        id: "cli-102",
+        nombre: "Carlos Andrés Restrepo",
+        telefono: "3104523311",
+        email: "carlos.restrepo@outlook.com",
+        documento: "1038554210",
+        direccion: "Sector La Dalia, El Peñol",
+        tipo_cliente: "VIP",
+        createdAt: new Date(Date.now() - 86400000 * 2).toISOString()
+      },
+      {
+        id: "cli-103",
+        nombre: "Valentina Muñoz",
+        telefono: "3117892233",
+        email: "valen.munoz@yahoo.es",
+        documento: "1040112845",
+        direccion: "Carrera 31 # 27-10, Rionegro",
+        tipo_cliente: "Empresarial",
+        createdAt: new Date().toISOString()
+      }
+    ];
+    localStorage.setItem(STORAGE_KEYS.CLIENTS, JSON.stringify(initialClients));
+  }
+
+  if (!localStorage.getItem(STORAGE_KEYS.SERVICES)) {
+    const initialServices = [
+      {
+        id: "srv-1",
+        titulo: "Banquetería y Catering de Gala",
+        categoria: "Catering",
+        imagen: "https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=1200&q=80",
+        descripcion: "Menús gourmet a 3 tiempos, pasabocas de bienvenida, repostería fina, vajilla de lujo y personal de protocolo para bodas y 15 años.",
+        destacado: true
+      },
+      {
+        id: "srv-2",
+        titulo: "Decoración y Ambientación Floral de Autor",
+        categoria: "Decoración",
+        imagen: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80",
+        descripcion: "Centros de mesa altos con flores naturales, arcos ceremoniales, backing de neón para fotos y ambientación de velas.",
+        destacado: true
+      },
+      {
+        id: "srv-3",
+        titulo: "Alquiler de Mobiliario y Menaje de Gala",
+        categoria: "Mobiliario",
+        imagen: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=1200&q=80",
+        descripcion: "Sillas Tiffany doradas, Phoenix, Crossback de madera, salas lounge, mantelería de alta costura y cristalería fina.",
+        destacado: true
+      },
+      {
+        id: "srv-4",
+        titulo: "Salón de Gala en Marinilla",
+        categoria: "Locación",
+        imagen: "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=1200&q=80",
+        descripcion: "Espacio climatizado para hasta 200 personas con acústica profesional, suite para anfitriones y ubicación estratégica en Marinilla.",
+        destacado: true
+      },
+      {
+        id: "srv-5",
+        titulo: "Finca Campestre El Peñol",
+        categoria: "Locación",
+        imagen: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=1200&q=80",
+        descripcion: "Exclusivo entorno campestre con vista a la represa, amplias zonas verdes, quiosco para ceremonias y parqueadero privado.",
+        destacado: true
+      },
+      {
+        id: "srv-6",
+        titulo: "Producción Audiovisual, Luces & DJ",
+        categoria: "Producción",
+        imagen: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1200&q=80",
+        descripcion: "Estructuras truss, cabezas móviles, pista de baile LED, chisperos fríos sin pólvora y DJ animador profesional.",
+        destacado: true
+      }
+    ];
+    localStorage.setItem(STORAGE_KEYS.SERVICES, JSON.stringify(initialServices));
+  }
+
+  if (!localStorage.getItem(STORAGE_KEYS.INVENTORY_CATEGORIES)) {
+    const defaultInvCategories = ["Sillas", "Mesas", "Carpas", "Menaje", "Mantelería", "Lounge"];
+    localStorage.setItem(STORAGE_KEYS.INVENTORY_CATEGORIES, JSON.stringify(defaultInvCategories));
+  }
+}
+
+initLocalStore();
+
+function getLocal(key) {
+  try {
+    return JSON.parse(localStorage.getItem(key)) || [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function setLocal(key, data) {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (e) {}
+}
+
+// ----------------- CLIENTE CLOUD FIRESTORE EN TIEMPO REAL -----------------
+let firestoreDb = null;
+let firestoreOps = null;
+
+async function initFirestoreLive() {
+  if (typeof window === "undefined" || !isFirebaseConfigured()) return null;
+  if (firestoreDb) return { db: firestoreDb, ops: firestoreOps };
+
+  try {
+    const { initializeApp, getApps } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
+    const ops = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+    firestoreDb = ops.getFirestore(app);
+    firestoreOps = ops;
+    console.log("🔥 Firebase Cloud Firestore Conectado en Vivo (Proyecto: banquetes-almar)");
+    return { db: firestoreDb, ops: firestoreOps };
+  } catch (error) {
+    console.warn("⚠️ Firebase Live inicialización (usando fallback local):", error.message);
+    return null;
+  }
+}
+
+// Inicializar en segundo plano sin bloquear
+if (typeof window !== "undefined") {
+  initFirestoreLive();
+}
+
+// ----------------- API DEL SERVICIO DE BASE DE DATOS -----------------
+
+export const dbService = {
+  // PAQUETES TODO INCLUIDO
+  async getPackages() {
+    const live = await initFirestoreLive();
+    if (live) {
+      try {
+        const { db, ops } = live;
+        const snapshot = await ops.getDocs(ops.collection(db, "paquetes"));
+        if (!snapshot.empty) {
+          const remoteItems = [];
+          snapshot.forEach(doc => remoteItems.push({ id: doc.id, ...doc.data() }));
+          setLocal(STORAGE_KEYS.PACKAGES, remoteItems);
+          return remoteItems;
+        }
+      } catch (err) {
+        console.warn("Firestore getPackages lectura:", err.message);
+      }
+    }
+    let localItems = getLocal(STORAGE_KEYS.PACKAGES);
+    if (!Array.isArray(localItems)) {
+      localItems = [];
+      setLocal(STORAGE_KEYS.PACKAGES, localItems);
+    }
+    return localItems;
+  },
+
+  async getPackageById(id) {
+    const list = await this.getPackages();
+    return list.find(p => String(p.id) === String(id)) || null;
+  },
+
+  async addPackage(pkg) {
+    const newPkg = {
+      ...pkg,
+      createdAt: new Date().toISOString()
+    };
+    const live = await initFirestoreLive();
+    if (live) {
+      try {
+        const { db, ops } = live;
+        const docRef = await ops.addDoc(ops.collection(db, "paquetes"), newPkg);
+        newPkg.id = docRef.id;
+      } catch (err) {
+        console.warn("Firestore addPackage error:", err.message);
+        newPkg.id = "pkg-" + Date.now();
+      }
+    } else {
+      newPkg.id = "pkg-" + Date.now();
+    }
+    const list = getLocal(STORAGE_KEYS.PACKAGES) || [];
+    list.push(newPkg);
+    setLocal(STORAGE_KEYS.PACKAGES, list);
+    return newPkg;
+  },
+
+  async updatePackage(id, pkgData) {
+    const live = await initFirestoreLive();
+    if (live) {
+      try {
+        const { db, ops } = live;
+        const docRef = ops.doc(db, "paquetes", id);
+        await ops.updateDoc(docRef, { ...pkgData, updatedAt: new Date().toISOString() });
+      } catch (err) {
+        console.warn("Firestore updatePackage error:", err.message);
+      }
+    }
+    const list = getLocal(STORAGE_KEYS.PACKAGES) || [];
+    const idx = list.findIndex(p => String(p.id) === String(id));
+    if (idx !== -1) {
+      list[idx] = { ...list[idx], ...pkgData, updatedAt: new Date().toISOString() };
+      setLocal(STORAGE_KEYS.PACKAGES, list);
+    }
+    return true;
+  },
+
+  async deletePackage(id) {
+    const live = await initFirestoreLive();
+    if (live) {
+      try {
+        const { db, ops } = live;
+        await ops.deleteDoc(ops.doc(db, "paquetes", id));
+      } catch (err) {
+        console.warn("Firestore deletePackage error:", err.message);
+      }
+    }
+    let list = getLocal(STORAGE_KEYS.PACKAGES) || [];
+    list = list.filter(p => String(p.id) !== String(id));
+    setLocal(STORAGE_KEYS.PACKAGES, list);
+    return true;
+  },
+
+  async resetDefaultPackages() {
+    setLocal(STORAGE_KEYS.PACKAGES, []);
+    return [];
+  },
+
+  // MOBILIARIO / ALQUILER
+  async getRentalItems(category = "todos") {
+    let list = getLocal(STORAGE_KEYS.RENTAL);
+    if (Array.isArray(list)) {
+      let modified = false;
+      list = list.map(item => {
+        if (item.id === "silla-tiffany-dorada" && item.imagen && item.imagen.includes("photo-1503602642458-232111445657")) {
+          modified = true;
+          return { ...item, imagen: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=800&q=80" };
+        }
+        return item;
+      });
+      if (modified) {
+        setLocal(STORAGE_KEYS.RENTAL, list);
+      }
+    }
+    if (!category || category === "todos") return list;
+    return list.filter(item => item.categoria.toLowerCase() === category.toLowerCase());
+  },
+
+  async getRentalItemById(id) {
+    const list = getLocal(STORAGE_KEYS.RENTAL);
+    return list.find(item => item.id === id) || null;
+  },
+
+  async getInventoryCategories() {
+    let cats = getLocal(STORAGE_KEYS.INVENTORY_CATEGORIES);
+    if (!Array.isArray(cats) || cats.length === 0) {
+      cats = ["Sillas", "Mesas", "Carpas", "Menaje", "Mantelería", "Lounge"];
+      setLocal(STORAGE_KEYS.INVENTORY_CATEGORIES, cats);
+    }
+    return cats;
+  },
+
+  async addInventoryCategory(name) {
+    const cats = await this.getInventoryCategories();
+    const clean = String(name || "").trim();
+    if (clean && !cats.some(c => c.toLowerCase() === clean.toLowerCase())) {
+      cats.push(clean);
+      setLocal(STORAGE_KEYS.INVENTORY_CATEGORIES, cats);
+    }
+    return cats;
+  },
+
+  async saveRentalItem(itemData) {
+    let items = await this.getRentalItems();
+    if (itemData.id) {
+      const idx = items.findIndex(i => String(i.id) === String(itemData.id));
+      if (idx !== -1) {
+        items[idx] = { ...items[idx], ...itemData, updatedAt: new Date().toISOString() };
+      } else {
+        items.unshift({ ...itemData, id: itemData.id || ("mob-" + Date.now()), createdAt: new Date().toISOString() });
+      }
+    } else {
+      itemData.id = "mob-" + Date.now();
+      itemData.createdAt = new Date().toISOString();
+      items.unshift(itemData);
+    }
+    setLocal(STORAGE_KEYS.RENTAL, items);
+    return itemData;
+  },
+
+  async deleteRentalItem(id) {
+    let items = await this.getRentalItems();
+    items = items.filter(i => String(i.id) !== String(id));
+    setLocal(STORAGE_KEYS.RENTAL, items);
+    return true;
+  },
+
+  // COTIZACIONES
+  async getQuotes() {
+    // 1. Intentar cargar desde Firestore en la nube si está activo
+    const live = await initFirestoreLive();
+    if (live) {
+      try {
+        const { db, ops } = live;
+        const q = ops.query(ops.collection(db, "cotizaciones"), ops.orderBy("createdAt", "desc"));
+        const snapshot = await ops.getDocs(q);
+        if (!snapshot.empty) {
+          const remoteQuotes = [];
+          snapshot.forEach(doc => {
+            remoteQuotes.push({ id: doc.id, ...doc.data() });
+          });
+          // Actualizar caché local
+          setLocal(STORAGE_KEYS.QUOTES, remoteQuotes);
+          return remoteQuotes;
+        }
+      } catch (err) {
+        console.warn("Firestore getQuotes lectura:", err.message);
+      }
+    }
+    return getLocal(STORAGE_KEYS.QUOTES).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  },
+
+  async createQuote(quoteData) {
+    const newQuote = {
+      ...quoteData,
+      estado: quoteData.estado || "Pendiente",
+      createdAt: new Date().toISOString()
+    };
+
+    // 1. Guardar en Firestore en la nube
+    const live = await initFirestoreLive();
+    if (live) {
+      try {
+        const { db, ops } = live;
+        const docRef = await ops.addDoc(ops.collection(db, "cotizaciones"), newQuote);
+        newQuote.id = docRef.id;
+      } catch (err) {
+        console.warn("Firestore createQuote escritura:", err.message);
+        newQuote.id = "cot-" + Date.now();
+      }
+    } else {
+      newQuote.id = "cot-" + Date.now();
+    }
+
+    // 2. Guardar en local para inmediatez
+    const quotes = getLocal(STORAGE_KEYS.QUOTES);
+    quotes.unshift(newQuote);
+    setLocal(STORAGE_KEYS.QUOTES, quotes);
+
+    return newQuote;
+  },
+
+  async updateQuoteStatus(id, estado) {
+    const live = await initFirestoreLive();
+    if (live && !id.startsWith("cot-")) {
+      try {
+        const { db, ops } = live;
+        await ops.updateDoc(ops.doc(db, "cotizaciones", id), { estado });
+      } catch (e) {}
+    }
+
+    const quotes = getLocal(STORAGE_KEYS.QUOTES);
+    const idx = quotes.findIndex(q => q.id === id);
+    if (idx !== -1) {
+      quotes[idx].estado = estado;
+      setLocal(STORAGE_KEYS.QUOTES, quotes);
+      return quotes[idx];
+    }
+    return { id, estado };
+  },
+
+  async updateQuote(id, quoteData) {
+    const live = await initFirestoreLive();
+    if (live && !String(id).startsWith("cot-")) {
+      try {
+        const { db, ops } = live;
+        await ops.updateDoc(ops.doc(db, "cotizaciones", String(id)), quoteData);
+      } catch (e) {
+        console.warn("Firestore updateQuote:", e.message);
+      }
+    }
+
+    const quotes = getLocal(STORAGE_KEYS.QUOTES);
+    const idx = quotes.findIndex(q => String(q.id) === String(id));
+    if (idx !== -1) {
+      quotes[idx] = { ...quotes[idx], ...quoteData };
+      setLocal(STORAGE_KEYS.QUOTES, quotes);
+      return quotes[idx];
+    }
+    return { id, ...quoteData };
+  },
+
+  async deleteQuote(id) {
+    const live = await initFirestoreLive();
+    if (live && !id.startsWith("cot-")) {
+      try {
+        const { db, ops } = live;
+        await ops.deleteDoc(ops.doc(db, "cotizaciones", id));
+      } catch (e) {}
+    }
+
+    let quotes = getLocal(STORAGE_KEYS.QUOTES);
+    quotes = quotes.filter(q => q.id !== id);
+    setLocal(STORAGE_KEYS.QUOTES, quotes);
+    return true;
+  },
+
+  // RESERVAS
+  async getReservations() {
+    const live = await initFirestoreLive();
+    if (live) {
+      try {
+        const { db, ops } = live;
+        const snapshot = await ops.getDocs(ops.collection(db, "reservas"));
+        if (!snapshot.empty) {
+          const remoteReservas = [];
+          snapshot.forEach(doc => remoteReservas.push({ id: doc.id, ...doc.data() }));
+          setLocal(STORAGE_KEYS.RESERVATIONS, remoteReservas);
+          return remoteReservas;
+        }
+      } catch (e) {}
+    }
+    return getLocal(STORAGE_KEYS.RESERVATIONS).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  },
+
+  async getReservationById(id) {
+    const live = await initFirestoreLive();
+    if (live) {
+      try {
+        const { db, ops } = live;
+        const docRef = ops.doc(db, "reservas", String(id));
+        const docSnap = await ops.getDoc(docRef);
+        if (docSnap.exists()) {
+          return { id: docSnap.id, ...docSnap.data() };
+        }
+      } catch (e) {
+        console.warn("Firestore getReservationById error:", e.message);
+      }
+    }
+    const reservas = getLocal(STORAGE_KEYS.RESERVATIONS) || [];
+    return reservas.find(r => String(r.id) === String(id)) || null;
+  },
+
+  async createReservation(reservaData) {
+    const newReserva = {
+      ...reservaData,
+      estado: reservaData.estado || "Confirmada",
+      createdAt: new Date().toISOString()
+    };
+
+    const live = await initFirestoreLive();
+    if (live) {
+      try {
+        const { db, ops } = live;
+        const docRef = await ops.addDoc(ops.collection(db, "reservas"), newReserva);
+        newReserva.id = docRef.id;
+      } catch (e) {
+        newReserva.id = "res-" + Date.now();
+      }
+    } else {
+      newReserva.id = "res-" + Date.now();
+    }
+
+    const reservas = getLocal(STORAGE_KEYS.RESERVATIONS);
+    reservas.unshift(newReserva);
+    setLocal(STORAGE_KEYS.RESERVATIONS, reservas);
+    return newReserva;
+  },
+
+  async updateReservation(id, updatedData) {
+    const live = await initFirestoreLive();
+    if (live && !String(id).startsWith("res-")) {
+      try {
+        const { db, ops } = live;
+        await ops.updateDoc(ops.doc(db, "reservas", String(id)), updatedData);
+      } catch (e) {
+        console.warn("Firestore updateReservation error:", e.message);
+      }
+    }
+
+    const reservas = getLocal(STORAGE_KEYS.RESERVATIONS);
+    const idx = reservas.findIndex(r => String(r.id) === String(id));
+    if (idx !== -1) {
+      reservas[idx] = { ...reservas[idx], ...updatedData };
+      setLocal(STORAGE_KEYS.RESERVATIONS, reservas);
+      return reservas[idx];
+    }
+    return { id, ...updatedData };
+  },
+
+  async deleteReservation(id) {
+    const live = await initFirestoreLive();
+    if (live && !String(id).startsWith("res-")) {
+      try {
+        const { db, ops } = live;
+        await ops.deleteDoc(ops.doc(db, "reservas", String(id)));
+      } catch (e) {
+        console.warn("Firestore deleteReservation error:", e.message);
+      }
+    }
+    let reservas = getLocal(STORAGE_KEYS.RESERVATIONS);
+    reservas = reservas.filter(r => r.id !== id);
+    setLocal(STORAGE_KEYS.RESERVATIONS, reservas);
+    return true;
+  },
+
+  // PAGOS Y ABONOS
+  async getPayments() {
+    const live = await initFirestoreLive();
+    if (live) {
+      try {
+        const { db, ops } = live;
+        const snapshot = await ops.getDocs(ops.collection(db, "pagos"));
+        if (!snapshot.empty) {
+          const remotePayments = [];
+          snapshot.forEach(doc => remotePayments.push({ id: doc.id, ...doc.data() }));
+          setLocal(STORAGE_KEYS.PAYMENTS, remotePayments);
+          return remotePayments;
+        }
+      } catch (e) {
+        console.warn("Firestore getPayments error:", e.message);
+      }
+    }
+    return getLocal(STORAGE_KEYS.PAYMENTS) || [];
+  },
+
+  async createPayment(paymentData) {
+    const newPayment = {
+      id: "pay-" + Date.now(),
+      ...paymentData,
+      fecha: paymentData.fecha || new Date().toISOString().slice(0, 10),
+      createdAt: new Date().toISOString()
+    };
+
+    const live = await initFirestoreLive();
+    if (live) {
+      try {
+        const { db, ops } = live;
+        await ops.setDoc(ops.doc(db, "pagos", newPayment.id), newPayment);
+      } catch (e) {
+        console.warn("Firestore createPayment error:", e.message);
+      }
+    }
+
+    const payments = getLocal(STORAGE_KEYS.PAYMENTS) || [];
+    payments.unshift(newPayment);
+    setLocal(STORAGE_KEYS.PAYMENTS, payments);
+
+    if (paymentData.reservaId) {
+      await this.recalcularSaldoReserva(paymentData.reservaId);
+    }
+
+    return newPayment;
+  },
+
+  async updatePayment(id, paymentData) {
+    const live = await initFirestoreLive();
+    if (live) {
+      try {
+        const { db, ops } = live;
+        await ops.updateDoc(ops.doc(db, "pagos", String(id)), {
+          ...paymentData,
+          updatedAt: new Date().toISOString()
+        });
+      } catch (e) {
+        console.warn("Firestore updatePayment error:", e.message);
+      }
+    }
+
+    const payments = getLocal(STORAGE_KEYS.PAYMENTS) || [];
+    const idx = payments.findIndex(p => String(p.id) === String(id));
+    if (idx !== -1) {
+      const oldReservaId = payments[idx].reservaId;
+      payments[idx] = { ...payments[idx], ...paymentData };
+      setLocal(STORAGE_KEYS.PAYMENTS, payments);
+
+      if (payments[idx].reservaId) {
+        await this.recalcularSaldoReserva(payments[idx].reservaId);
+      }
+      if (oldReservaId && oldReservaId !== payments[idx].reservaId) {
+        await this.recalcularSaldoReserva(oldReservaId);
+      }
+      return payments[idx];
+    }
+    return null;
+  },
+
+  async deletePayment(id) {
+    const live = await initFirestoreLive();
+    if (live) {
+      try {
+        const { db, ops } = live;
+        await ops.deleteDoc(ops.doc(db, "pagos", String(id)));
+      } catch (e) {
+        console.warn("Firestore deletePayment error:", e.message);
+      }
+    }
+
+    const payments = getLocal(STORAGE_KEYS.PAYMENTS) || [];
+    const item = payments.find(p => String(p.id) === String(id));
+    const reservaId = item ? item.reservaId : null;
+    const filtered = payments.filter(p => String(p.id) !== String(id));
+    setLocal(STORAGE_KEYS.PAYMENTS, filtered);
+
+    if (reservaId) {
+      await this.recalcularSaldoReserva(reservaId);
+    }
+    return true;
+  },
+
+  async recalcularSaldoReserva(reservaId) {
+    if (!reservaId) return;
+    const reservas = getLocal(STORAGE_KEYS.RESERVATIONS);
+    const resIdx = reservas.findIndex(r => String(r.id) === String(reservaId));
+    if (resIdx !== -1) {
+      const payments = getLocal(STORAGE_KEYS.PAYMENTS);
+      const totalAbonado = payments
+        .filter(p => String(p.reservaId) === String(reservaId))
+        .reduce((sum, p) => sum + (Number(p.monto) || 0), 0);
+      
+      reservas[resIdx].anticipo = totalAbonado;
+      const total = Number(reservas[resIdx].total) || 0;
+      reservas[resIdx].saldo = Math.max(0, total - totalAbonado);
+      setLocal(STORAGE_KEYS.RESERVATIONS, reservas);
+    }
+  },
+
+
+  // GALERÍA Y CATEGORÍAS
+  async getGalleryCategories() {
+    let cats = getLocal(STORAGE_KEYS.GALLERY_CATEGORIES);
+    if (!Array.isArray(cats) || cats.length === 0) {
+      cats = [
+        "Bodas",
+        "15 Años",
+        "Salón Marinilla",
+        "Finca El Peñol",
+        "Mobiliario",
+        "Catering",
+        "Eventos Corporativos"
+      ];
+      setLocal(STORAGE_KEYS.GALLERY_CATEGORIES, cats);
+    }
+    return cats;
+  },
+
+  async addGalleryCategory(name) {
+    const trimmed = (name || "").trim();
+    if (!trimmed) return false;
+    const cats = await this.getGalleryCategories();
+    if (!cats.some(c => c.toLowerCase() === trimmed.toLowerCase())) {
+      cats.push(trimmed);
+      setLocal(STORAGE_KEYS.GALLERY_CATEGORIES, cats);
+    }
+    return cats;
+  },
+
+  async deleteGalleryCategory(name) {
+    let cats = await this.getGalleryCategories();
+    cats = cats.filter(c => c.toLowerCase() !== name.toLowerCase());
+    setLocal(STORAGE_KEYS.GALLERY_CATEGORIES, cats);
+    return cats;
+  },
+
+  async getGallery() {
+    const live = await initFirestoreLive();
+    if (live) {
+      try {
+        const { db, ops } = live;
+        const snapshot = await ops.getDocs(ops.collection(db, "galeria"));
+        if (!snapshot.empty) {
+          const remoteItems = [];
+          snapshot.forEach(doc => remoteItems.push({ id: doc.id, ...doc.data() }));
+          setLocal(STORAGE_KEYS.GALLERY, remoteItems);
+          return remoteItems;
+        }
+      } catch (err) {
+        console.warn("Firestore getGallery:", err.message);
+      }
+    }
+    let localItems = getLocal(STORAGE_KEYS.GALLERY);
+    if (!Array.isArray(localItems) || localItems.length === 0) {
+      initDB();
+      localItems = getLocal(STORAGE_KEYS.GALLERY);
+    }
+    return localItems;
+  },
+
+  async addGalleryItem(item) {
+    const newItem = {
+      ...item,
+      createdAt: new Date().toISOString()
+    };
+
+    const live = await initFirestoreLive();
+    if (live) {
+      try {
+        const { db, ops } = live;
+        const docRef = await ops.addDoc(ops.collection(db, "galeria"), newItem);
+        newItem.id = docRef.id;
+      } catch (err) {
+        console.warn("Firestore addGalleryItem:", err.message);
+        newItem.id = "gal-" + Date.now();
+      }
+    } else {
+      newItem.id = "gal-" + Date.now();
+    }
+
+    const gallery = getLocal(STORAGE_KEYS.GALLERY);
+    gallery.unshift(newItem);
+    setLocal(STORAGE_KEYS.GALLERY, gallery);
+    return newItem;
+  },
+
+  async updateGalleryItem(id, itemData) {
+    const live = await initFirestoreLive();
+    if (live && !String(id).startsWith("gal-")) {
+      try {
+        const { db, ops } = live;
+        await ops.updateDoc(ops.doc(db, "galeria", String(id)), itemData);
+      } catch (err) {
+        console.warn("Firestore updateGalleryItem:", err.message);
+      }
+    }
+
+    const gallery = getLocal(STORAGE_KEYS.GALLERY);
+    const idx = gallery.findIndex(g => String(g.id) === String(id));
+    if (idx !== -1) {
+      gallery[idx] = { ...gallery[idx], ...itemData, id };
+      setLocal(STORAGE_KEYS.GALLERY, gallery);
+      return gallery[idx];
+    }
+    return { id, ...itemData };
+  },
+
+  async deleteGalleryItem(id) {
+    const live = await initFirestoreLive();
+    if (live && !String(id).startsWith("gal-")) {
+      try {
+        const { db, ops } = live;
+        await ops.deleteDoc(ops.doc(db, "galeria", String(id)));
+      } catch (err) {
+        console.warn("Firestore deleteGalleryItem:", err.message);
+      }
+    }
+
+    let gallery = getLocal(STORAGE_KEYS.GALLERY);
+    gallery = gallery.filter(g => String(g.id) !== String(id));
+    setLocal(STORAGE_KEYS.GALLERY, gallery);
+    return true;
+  },
+
+  async saveGalleryOrder(orderedItems) {
+    if (Array.isArray(orderedItems)) {
+      setLocal(STORAGE_KEYS.GALLERY, orderedItems);
+    }
+    return orderedItems;
+  },
+
+  // CLIENTES
+  async getClients() {
+    const live = await initFirestoreLive();
+    if (live) {
+      try {
+        const { db, ops } = live;
+        const snapshot = await ops.getDocs(ops.collection(db, "clientes"));
+        if (!snapshot.empty) {
+          const remoteClients = [];
+          snapshot.forEach(doc => remoteClients.push({ id: doc.id, ...doc.data() }));
+          setLocal(STORAGE_KEYS.CLIENTS, remoteClients);
+          return remoteClients;
+        }
+      } catch (err) {
+        console.warn("Firestore getClients:", err.message);
+      }
+    }
+    return getLocal(STORAGE_KEYS.CLIENTS).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  },
+
+  async getClientById(id) {
+    const clients = await this.getClients();
+    return clients.find(c => String(c.id) === String(id)) || null;
+  },
+
+  async createClient(clientData) {
+    const newClient = {
+      ...clientData,
+      createdAt: new Date().toISOString()
+    };
+
+    const live = await initFirestoreLive();
+    if (live) {
+      try {
+        const { db, ops } = live;
+        const docRef = await ops.addDoc(ops.collection(db, "clientes"), newClient);
+        newClient.id = docRef.id;
+      } catch (err) {
+        console.warn("Firestore createClient:", err.message);
+        newClient.id = "cli-" + Date.now();
+      }
+    } else {
+      newClient.id = "cli-" + Date.now();
+    }
+
+    const clients = getLocal(STORAGE_KEYS.CLIENTS);
+    clients.unshift(newClient);
+    setLocal(STORAGE_KEYS.CLIENTS, clients);
+    return newClient;
+  },
+
+  async updateClient(id, clientData) {
+    const live = await initFirestoreLive();
+    if (live && !String(id).startsWith("cli-")) {
+      try {
+        const { db, ops } = live;
+        await ops.updateDoc(ops.doc(db, "clientes", String(id)), clientData);
+      } catch (err) {
+        console.warn("Firestore updateClient:", err.message);
+      }
+    }
+
+    const clients = getLocal(STORAGE_KEYS.CLIENTS);
+    const idx = clients.findIndex(c => String(c.id) === String(id));
+    if (idx !== -1) {
+      clients[idx] = { ...clients[idx], ...clientData, id };
+      setLocal(STORAGE_KEYS.CLIENTS, clients);
+      return clients[idx];
+    }
+    return { id, ...clientData };
+  },
+
+  async deleteClient(id) {
+    const live = await initFirestoreLive();
+    if (live && !String(id).startsWith("cli-")) {
+      try {
+        const { db, ops } = live;
+        await ops.deleteDoc(ops.doc(db, "clientes", String(id)));
+      } catch (err) {
+        console.warn("Firestore deleteClient:", err.message);
+      }
+    }
+
+    let clients = getLocal(STORAGE_KEYS.CLIENTS);
+    clients = clients.filter(c => String(c.id) !== String(id));
+    setLocal(STORAGE_KEYS.CLIENTS, clients);
+    return true;
+  },
+
+  async searchClients(query) {
+    const clients = await this.getClients();
+    if (!query || !query.trim()) return clients;
+    const q = query.toLowerCase().trim();
+    return clients.filter(c => 
+      String(c.nombre || "").toLowerCase().includes(q) ||
+      String(c.telefono || "").toLowerCase().includes(q) ||
+      String(c.documento || "").toLowerCase().includes(q) ||
+      String(c.email || "").toLowerCase().includes(q) ||
+      String(c.id || "").toLowerCase().includes(q)
+    );
+  },
+
+  // GESTIÓN DE SERVICIOS
+  async getServices() {
+    const live = await initFirestoreLive();
+    if (live) {
+      try {
+        const { db, ops } = live;
+        const snapshot = await ops.getDocs(ops.collection(db, "servicios"));
+        if (!snapshot.empty) {
+          const remoteItems = [];
+          snapshot.forEach(doc => remoteItems.push({ id: doc.id, ...doc.data() }));
+          setLocal(STORAGE_KEYS.SERVICES, remoteItems);
+          return remoteItems;
+        }
+      } catch (err) {
+        console.warn("Firestore getServices:", err.message);
+      }
+    }
+    let localItems = getLocal(STORAGE_KEYS.SERVICES);
+    if (!Array.isArray(localItems) || localItems.length === 0) {
+      initLocalStore();
+      localItems = getLocal(STORAGE_KEYS.SERVICES);
+    }
+    return localItems || [];
+  },
+
+  async addService(service) {
+    const newService = {
+      ...service,
+      createdAt: new Date().toISOString()
+    };
+    const live = await initFirestoreLive();
+    if (live) {
+      try {
+        const { db, ops } = live;
+        const docRef = await ops.addDoc(ops.collection(db, "servicios"), newService);
+        newService.id = docRef.id;
+      } catch (err) {
+        console.warn("Firestore addService error:", err.message);
+        newService.id = "srv-" + Date.now();
+      }
+    } else {
+      newService.id = "srv-" + Date.now();
+    }
+    const list = getLocal(STORAGE_KEYS.SERVICES) || [];
+    list.unshift(newService);
+    setLocal(STORAGE_KEYS.SERVICES, list);
+    return newService;
+  },
+
+  async updateService(id, serviceData) {
+    const live = await initFirestoreLive();
+    if (live) {
+      try {
+        const { db, ops } = live;
+        const docRef = ops.doc(db, "servicios", id);
+        await ops.updateDoc(docRef, { ...serviceData, updatedAt: new Date().toISOString() });
+      } catch (err) {
+        console.warn("Firestore updateService error:", err.message);
+      }
+    }
+    const list = getLocal(STORAGE_KEYS.SERVICES) || [];
+    const idx = list.findIndex(s => String(s.id) === String(id));
+    if (idx !== -1) {
+      list[idx] = { ...list[idx], ...serviceData, updatedAt: new Date().toISOString() };
+      setLocal(STORAGE_KEYS.SERVICES, list);
+    }
+    return true;
+  },
+
+  async deleteService(id) {
+    const live = await initFirestoreLive();
+    if (live) {
+      try {
+        const { db, ops } = live;
+        await ops.deleteDoc(ops.doc(db, "servicios", id));
+      } catch (err) {
+        console.warn("Firestore deleteService error:", err.message);
+      }
+    }
+    let list = getLocal(STORAGE_KEYS.SERVICES) || [];
+    list = list.filter(s => String(s.id) !== String(id));
+    setLocal(STORAGE_KEYS.SERVICES, list);
+    return true;
+  },
+
+  // ESTADÍSTICAS DEL DASHBOARD
+  async getStats() {
+    const quotes = getLocal(STORAGE_KEYS.QUOTES);
+    const reservas = getLocal(STORAGE_KEYS.RESERVATIONS);
+    const payments = getLocal(STORAGE_KEYS.PAYMENTS);
+    const clients = getLocal(STORAGE_KEYS.CLIENTS);
+
+    const totalIngresos = payments.reduce((acc, p) => acc + (Number(p.monto) || 0), 0);
+    const totalPendiente = reservas.reduce((acc, r) => acc + (Number(r.saldo) || 0), 0);
+    const confirmados = reservas.filter(r => r.estado === "Confirmada" || r.estado === "Finalizado").length;
+
+    return {
+      totalQuotes: quotes.length,
+      totalEventos: reservas.length,
+      totalClientes: clients.length,
+      confirmados: confirmados,
+      ingresos: totalIngresos,
+      pendiente: totalPendiente
+    };
+  },
+
+  // FRANJA DE ANUNCIO SUPERIOR (CABECERA WEB)
+  async getAnnouncement() {
+    let item = getLocal(STORAGE_KEYS.ANNOUNCEMENT);
+    if (!item) {
+      item = { ...DEFAULT_ANNOUNCEMENT };
+      setLocal(STORAGE_KEYS.ANNOUNCEMENT, item);
+    }
+    const live = await initFirestoreLive();
+    if (live) {
+      try {
+        const { db, ops } = live;
+        const docRef = ops.doc(db, "configuracion", "anuncio_superior");
+        const snap = await ops.getDoc(docRef);
+        if (snap.exists()) {
+          item = snap.data();
+          setLocal(STORAGE_KEYS.ANNOUNCEMENT, item);
+        }
+      } catch (err) {
+        console.warn("Firestore getAnnouncement error:", err.message);
+      }
+    }
+    return item;
+  },
+
+  async saveAnnouncement(data) {
+    const clean = {
+      activo: data.activo !== false,
+      icono: String(data.icono || "✨").trim(),
+      titulo: String(data.titulo || "").trim(),
+      mensaje: String(data.mensaje || "").trim(),
+      badge: String(data.badge || "").trim(),
+      subtexto: String(data.subtexto || "").trim(),
+      updatedAt: new Date().toISOString()
+    };
+    setLocal(STORAGE_KEYS.ANNOUNCEMENT, clean);
+    const live = await initFirestoreLive();
+    if (live) {
+      try {
+        const { db, ops } = live;
+        const docRef = ops.doc(db, "configuracion", "anuncio_superior");
+        await ops.setDoc(docRef, clean, { merge: true });
+      } catch (err) {
+        console.warn("Firestore saveAnnouncement error:", err.message);
+      }
+    }
+    return clean;
+  },
+
+  async resetAnnouncement() {
+    const clean = { ...DEFAULT_ANNOUNCEMENT, updatedAt: new Date().toISOString() };
+    setLocal(STORAGE_KEYS.ANNOUNCEMENT, clean);
+    const live = await initFirestoreLive();
+    if (live) {
+      try {
+        const { db, ops } = live;
+        const docRef = ops.doc(db, "configuracion", "anuncio_superior");
+        await ops.setDoc(docRef, clean, { merge: true });
+      } catch (err) {
+        console.warn("Firestore resetAnnouncement error:", err.message);
+      }
+    }
+    return clean;
+  }
+};

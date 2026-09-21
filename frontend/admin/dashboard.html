@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Dashboard Ejecutivo | Banquetes Almar</title>
+  <link rel="icon" type="image/png" href="../images/logo-almar.png" />
+  <link rel="apple-touch-icon" href="../images/logo-almar.png" />
+  <meta name="theme-color" content="#0b0b0b" />
+  <link rel="stylesheet" href="../css/tailwind.css" />
+</head>
+<body>
+  <header id="adminNavbar"></header>
+
+  <section class="section admin-panel">
+    <div class="container">
+      <div class="section-heading">
+        <p class="section-label">Suite Ejecutiva</p>
+        <h2>Torre de Control Almar</h2>
+        <p id="adminWelcome">Bienvenido al centro de operaciones y agenda de gala.</p>
+      </div>
+
+      <!-- BARRA DE ACCIÓN EJECUTIVA & EXPORTACIÓN CONTABLE -->
+      <div class="flex justify-between items-center mb-6 flex-wrap gap-4 bg-white/[0.03] border border-white/10 rounded-2xl px-6 py-4">
+        <div>
+          <span class="text-xs uppercase tracking-wider font-bold text-amber-300">📊 Estado Financiero Consolidado</span>
+          <p class="text-white/60 text-sm mt-1 m-0">Control maestro de ingresos, recaudos bancarios y saldos pendientes.</p>
+        </div>
+        <button id="btnExportFinancialReport" class="btn btn-primary inline-flex items-center gap-2.5 px-6 py-2.5 text-sm font-bold bg-gradient-to-r from-emerald-500 to-emerald-600 border border-emerald-400 shadow-lg shadow-emerald-500/30 text-white cursor-pointer rounded-full hover:from-emerald-400 hover:to-emerald-500 transition-all">
+          <span>📥 Exportar Informe a Excel (CSV)</span>
+        </button>
+      </div>
+
+      <!-- TARJETAS DE MÉTRICAS CLAVE (KPIs ESTRATÉGICOS) -->
+      <div class="admin-summary">
+        <div class="summary-card">
+          <span class="summary-title">💰 Total Recaudado</span>
+          <strong id="ingresos">$0</strong>
+        </div>
+
+        <div class="summary-card">
+          <span class="summary-title">⏳ Saldo por Cobrar</span>
+          <strong id="pendiente">$0</strong>
+        </div>
+
+        <div class="summary-card">
+          <span class="summary-title">💍 Eventos en Agenda</span>
+          <strong id="totalEventos">0</strong>
+        </div>
+
+        <div class="summary-card">
+          <span class="summary-title">💬 Solicitudes Web</span>
+          <strong id="totalQuotes">0</strong>
+        </div>
+      </div>
+
+      <!-- WIDGET EJECUTIVO: FRANJA DE ANUNCIO EN VIVO EN LA PORTADA -->
+      <div class="dashboard-announcement-banner bg-amber-500/[0.06] border border-amber-500/30 rounded-[18px] px-6 py-5 my-7 flex items-center justify-between gap-6 flex-wrap">
+        <div class="flex-1 min-w-[280px]">
+          <div class="flex items-center gap-2.5 mb-2">
+            <span class="text-xs uppercase tracking-wider font-bold text-amber-300">📢 Barra Superior en la Portada</span>
+            <span id="dashAnnouncementStatus" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">🟢 En Vivo</span>
+          </div>
+          <!-- Preview Miniatura idéntica a la real -->
+          <div id="dashAnnouncementPreview" class="bg-[#0a0a0e]/85 border border-amber-500/20 rounded-xl px-4 py-2.5 text-sm text-zinc-200 flex items-center gap-2.5 overflow-hidden text-ellipsis whitespace-nowrap">
+            <span id="dashIcon">✨</span>
+            <strong id="dashTitle" class="text-amber-200">Temporada de Eventos 2026-2027:</strong>
+            <span id="dashMsg" class="text-zinc-300">Salón de Gala en Marinilla & Finca Campestre en El Peñol</span>
+            <span id="dashBadge" class="bg-amber-500/15 border border-amber-500/35 text-amber-200 px-2.5 py-0.5 rounded-full text-xs ml-auto">Oriente Antioqueño</span>
+          </div>
+        </div>
+        <div class="flex gap-3">
+          <a href="./anuncio.html" class="btn btn-primary text-sm px-5 py-2.5 whitespace-nowrap">
+            ✏️ Configurar Anuncio
+          </a>
+          <a href="../index.html" target="_blank" class="btn btn-secondary text-sm px-4 py-2.5 whitespace-nowrap" title="Ver en la web pública">
+            🌐 Ver Web
+          </a>
+        </div>
+      </div>
+
+      <!-- TORRE DE CONTROL EN 3 COLUMNAS ESTRATÉGICAS (CERO DUPLICADOS) -->
+      <div class="dashboard-control-grid">
+        <!-- COLUMNA 1: SOLICITUDES PENDIENTES DE RESPUESTA -->
+        <section class="control-panel">
+          <div class="control-panel-head">
+            <div>
+              <p class="dashboard-mini-label">Atención al Cliente</p>
+              <h3 class="text-white text-lg m-0 font-medium">🔔 Solicitudes por Atender</h3>
+            </div>
+            <a href="./cotizaciones.html" class="btn btn-secondary btn-sm text-xs px-3.5 py-1.5">Ver todas</a>
+          </div>
+          <div id="pendingQuotesList" class="control-panel-body">
+            <!-- Render dinámico -->
+          </div>
+        </section>
+
+        <!-- COLUMNA 2: AGENDA OPERATIVA PRÓXIMA (A MONTAR PRONTO) -->
+        <section class="control-panel">
+          <div class="control-panel-head">
+            <div>
+              <p class="dashboard-mini-label">Operación & Montaje</p>
+              <h3 class="text-white text-lg m-0 font-medium">🗓️ Próximos Eventos</h3>
+            </div>
+            <a href="./reservas.html" class="btn btn-secondary btn-sm text-xs px-3.5 py-1.5">Ver agenda</a>
+          </div>
+          <div id="upcomingEventsList" class="control-panel-body">
+            <!-- Render dinámico -->
+          </div>
+        </section>
+
+        <!-- COLUMNA 3: ALERTAS DE COBROS Y SALDOS URGENTES -->
+        <section class="control-panel">
+          <div class="control-panel-head">
+            <div>
+              <p class="dashboard-mini-label">Gestión de Cobranza</p>
+              <h3 class="text-white text-lg m-0 font-medium">⚠️ Alertas de Saldos</h3>
+            </div>
+            <a href="./pagos.html" class="btn btn-secondary btn-sm text-xs px-3.5 py-1.5">Ver finanzas</a>
+          </div>
+          <div id="paymentAlertsList" class="control-panel-body">
+            <!-- Render dinámico -->
+          </div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script type="module" src="../js/components/admin-navbar.js"></script>
+  <script type="module" src="../js/dashboard.js?v=20260909.2"></script>
+</body>
+</html>

@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portal del Anfitrión VIP | Banquetes Almar</title>
+  <meta name="description" content="Portal privado para clientes de Banquetes Almar. Consulta el estado de tu evento, cuenta regresiva, historial de abonos y contrato oficial." />
+
+  <!-- Open Graph & Social Sharing -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Banquetes Almar" />
+  <meta property="og:title" content="Portal del Anfitrión VIP | Banquetes Almar" />
+  <meta property="og:description" content="Consulta el estado de tu evento, cuenta regresiva, recibos de abono y contrato oficial." />
+  <meta property="og:url" content="https://banquetes-almar.web.app/portal-cliente" />
+  <meta property="og:image" content="https://banquetes-almar.web.app/images/hero.jpg" />
+  <meta property="og:locale" content="es_CO" />
+
+  <!-- Favicon & PWA -->
+  <link rel="icon" type="image/png" href="./images/logo-almar.png" />
+  <link rel="apple-touch-icon" href="./images/logo-almar.png" />
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="theme-color" content="#09090b" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/tailwind.css" />
+
+  <!-- SweetAlert2 & Alertas de Gala -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="./js/alerts-luxury.js?v=20260909.5"></script>
+</head>
+<body class="bg-zinc-950 min-h-screen text-zinc-100 font-sans">
+
+  <!-- BARRA DE NAVEGACIÓN SUPERIOR -->
+  <header class="header sticky top-0 z-50 backdrop-blur-xl bg-zinc-950/85 border-b border-zinc-800/80">
+    <nav class="navbar container portal-header-nav">
+      <a href="./index.html" class="brand">
+        <img src="./images/logo-almar.png" alt="Logo Banquetes Almar" class="brand-logo" onerror="this.classList.add('hidden')" />
+        <div class="brand-text">
+          <span class="logo-main">Banquetes Almar</span>
+          <span class="logo-sub">Portal del Anfitrión VIP</span>
+        </div>
+      </a>
+
+      <ul class="nav-links portal-nav-links">
+        <li><a href="./index.html" class="nav-back-link">← Volver al Sitio</a></li>
+        <li><a href="https://wa.me/573148849011?text=Hola%20Banquetes%20Almar,%20tengo%20una%20consulta%20sobre%20mi%20evento" target="_blank" class="btn-apple-secondary py-2 px-4 text-xs font-medium">💬 Asesor WhatsApp</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="portal-container">
+    
+    <!-- CONSULTA RÁPIDA DE EVENTO -->
+    <div class="portal-card" id="lookupCard">
+      <div class="portal-header">
+        <span class="section-label">Acceso Exclusivo para Anfitriones</span>
+        <h1 class="font-serif text-3xl sm:text-4xl text-white font-bold mt-2">
+          Mi Celebración Banquetes Almar
+        </h1>
+        <p class="text-zinc-400 max-w-xl mx-auto mt-3 text-sm sm:text-base leading-relaxed">
+          Ingresa tu número de celular o código de reserva para ver la cuenta regresiva, tus abonos registrados y tu contrato oficial.
+        </p>
+      </div>
+
+      <form id="portalLookupForm" class="flex gap-3 max-w-lg mx-auto flex-wrap mt-6">
+        <input 
+          type="text" 
+          id="lookupQuery" 
+          placeholder="Ingresa tu celular (ej: 311 789 2233) o código ALM-..." 
+          required 
+          class="flex-1 min-w-[240px] px-5 py-3.5 bg-zinc-900 border border-zinc-700/80 rounded-full text-white placeholder-zinc-500 focus:outline-none focus:border-amber-400 text-sm" 
+        />
+        <button type="submit" class="btn-apple-primary px-7 py-3.5 text-sm font-semibold rounded-full">
+          Consultar
+        </button>
+      </form>
+
+      <!-- MENSAJE DE NO ENCONTRADO -->
+      <div id="eventNotFound" class="hidden text-center p-8 bg-zinc-900/90 border border-dashed border-amber-500/30 rounded-2xl mt-6">
+        <span class="text-4xl block mb-2">🔍</span>
+        <h3 class="text-white text-lg font-bold mb-1">No encontramos una reserva con esos datos</h3>
+        <p class="text-zinc-400 max-w-md mx-auto mb-5 text-sm">
+          Verifica que el número de celular o código coincida con el registrado en tu contrato, o comunícate directamente con nuestro equipo de coordinación.
+        </p>
+        <a href="https://wa.me/573104458892?text=Hola%20Banquetes%20Almar,%20necesito%20apoyo%20para%20consultar%20mi%20evento%20en%20el%20portal" target="_blank" class="btn-apple-primary inline-flex items-center gap-2 text-sm px-6 py-2.5">
+          💬 Contactar a mi Asesor
+        </a>
+      </div>
+    </div>
+
+    <!-- VISTA PRINCIPAL DEL CLIENTE (SE MUESTRA TRAS CONSULTAR) -->
+    <div id="eventDetailsSection" class="hidden">
+      
+      <!-- HERO DE LA RESERVA & CUENTA REGRESIVA -->
+      <div class="portal-card">
+        <div class="flex justify-between items-start flex-wrap gap-4">
+          <div>
+            <span class="tile-badge static inline-block mb-3" id="clientStatusBadge">
+              Reserva Confirmada
+            </span>
+            <h2 id="clientEventTitle" class="font-serif text-2xl sm:text-3xl font-bold text-white">
+              Boda Imperial • Valentina & Juan Esteban
+            </h2>
+            <p id="clientVenueText" class="text-amber-300 text-sm sm:text-base mt-1">
+              📍 Finca Campestre Almar (El Peñol, Antioquia)
+            </p>
+          </div>
+
+          <div class="text-right">
+            <span class="text-xs text-zinc-400 block">Código de Evento:</span>
+            <div id="clientCodeDisplay" class="font-mono text-lg font-bold text-amber-300">
+              ALM-RES201
+            </div>
+          </div>
+        </div>
+
+        <!-- RELOJ DE CUENTA REGRESIVA -->
+        <div class="countdown-box">
+          <div class="countdown-unit">
+            <div class="countdown-number" id="cdDays">89</div>
+            <div class="countdown-label">Días</div>
+          </div>
+          <div class="countdown-unit">
+            <div class="countdown-number" id="cdHours">14</div>
+            <div class="countdown-label">Horas</div>
+          </div>
+          <div class="countdown-unit">
+            <div class="countdown-number" id="cdMinutes">32</div>
+            <div class="countdown-label">Minutos</div>
+          </div>
+          <div class="countdown-unit">
+            <div class="countdown-number" id="cdSeconds">05</div>
+            <div class="countdown-label">Segundos</div>
+          </div>
+        </div>
+
+        <div class="bg-amber-500/10 border border-dashed border-amber-500/40 p-4 rounded-xl flex justify-between items-center flex-wrap gap-3 mt-6">
+          <div>
+            <strong class="text-white text-sm font-semibold">📅 Fecha de la Celebración:</strong>
+            <span id="clientEventDate" class="text-amber-300 font-semibold ml-2">Sábado, 05 de Diciembre de 2026</span>
+          </div>
+          <div>
+            <strong class="text-white text-sm font-semibold">👥 Invitados:</strong>
+            <span id="clientGuestsCount" class="text-amber-300 font-semibold ml-2">100 personas</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ESTADO FINANCIERO Y ABONOS -->
+      <div class="portal-card">
+        <h3 class="font-serif text-xl font-bold text-white mb-2">
+          Estado Financiero y Pagos
+        </h3>
+        <p class="text-xs text-zinc-400 mb-6">
+          Control transparente de inversión, anticipo y saldo de tu evento.
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <div class="bg-white/5 border border-zinc-800 rounded-xl p-5">
+            <span class="text-xs text-zinc-400 uppercase tracking-wider block">Inversión Total</span>
+            <div id="totalInversionDisplay" class="text-2xl font-extrabold text-white mt-1">
+              $11.800.000
+            </div>
+          </div>
+
+          <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-5">
+            <span class="text-xs text-emerald-300 uppercase tracking-wider block">Abonado a la Fecha</span>
+            <div id="totalAbonadoDisplay" class="text-2xl font-extrabold text-emerald-400 mt-1">
+              $4.000.000
+            </div>
+          </div>
+
+          <div class="bg-rose-500/10 border border-rose-500/30 rounded-xl p-5">
+            <span class="text-xs text-rose-400 uppercase tracking-wider block">Saldo Pendiente</span>
+            <div id="saldoPendienteDisplay" class="text-2xl font-extrabold text-rose-400 mt-1">
+              $7.800.000
+            </div>
+          </div>
+        </div>
+
+        <!-- BARRA DE PROGRESO DE PAGO -->
+        <div class="flex justify-between text-xs text-zinc-400 mb-1">
+          <span>Progreso de Pago</span>
+          <span id="paymentPercentageText">34% Completado</span>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" id="paymentProgressBar"></div>
+        </div>
+
+        <!-- TABLA DE HISTORIAL DE PAGOS -->
+        <h4 class="text-sm font-semibold text-white mt-8 mb-3">Historial de Pagos Registrados:</h4>
+        <div class="overflow-x-auto w-full">
+          <table class="payment-history-table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Concepto</th>
+                <th>Método</th>
+                <th class="text-right">Valor</th>
+              </tr>
+            </thead>
+            <tbody id="paymentHistoryBody">
+              <tr>
+                <td>01/09/2026</td>
+                <td>Anticipo de separación de fecha</td>
+                <td>Transferencia Bancolombia</td>
+                <td class="text-right text-emerald-400 font-bold">+$4.000.000</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ACCIONES LEGALES Y DESCARGAS -->
+      <div class="portal-card flex justify-between items-center flex-wrap gap-6 bg-gradient-to-r from-zinc-900/80 via-zinc-950 to-amber-950/20 border border-amber-500/30">
+        <div>
+          <h3 class="font-serif text-xl font-bold text-white">
+            Contrato y Documentación Legal
+          </h3>
+          <p class="text-xs text-zinc-400 mt-1">
+            Descarga tu contrato formal vigente con el respaldo de Banquetes Almar.
+          </p>
+        </div>
+
+        <div class="flex gap-3 flex-wrap">
+          <a href="./admin/contrato.html?id=res-201&mode=client" id="btnDownloadContract" target="_blank" class="btn-apple-primary">
+            📄 Descargar Contrato Oficial (PDF)
+          </a>
+          <button type="button" id="btnOpenPaymentModal" class="btn-apple-secondary cursor-pointer">
+            💳 Realizar o Reportar Abono
+          </button>
+        </div>
+      <!-- CONFIGURADOR DE MONTAJE, MOBILIARIO & ESTILO DE GALA -->
+      <div class="portal-card" id="montajeCard">
+        <div class="flex justify-between items-start flex-wrap gap-4 mb-6 border-b border-amber-500/20 pb-4">
+          <div>
+            <span class="text-[11px] uppercase tracking-wider text-amber-300 font-bold block mb-1">
+              ✨ Personalización de Experiencia
+            </span>
+            <h3 class="font-serif text-2xl font-bold text-white">
+              Montaje, Mobiliario & Estilo de Gala
+            </h3>
+            <p class="text-xs text-zinc-400 mt-1 max-w-xl">
+              Configura cómo deseas que luzca tu salón o finca. El equipo de logística y decoración de Banquetes Almar preparará el mobiliario según tu selección.
+            </p>
+          </div>
+          <div id="montajeStatusBadge" class="text-xs px-3 py-1 rounded-full border border-amber-500/40 bg-amber-500/10 text-amber-300 font-semibold">
+            🟡 Pendiente por Definir
+          </div>
+        </div>
+
+        <form id="montajeForm" class="flex flex-col gap-6">
+          <!-- 1. SILLAS & ASIENTOS -->
+          <div class="montaje-category">
+            <div class="montaje-cat-header">
+              <span class="montaje-cat-title">🪑 1. Sillas & Asientos de Gala</span>
+              <span class="montaje-cat-badge">Mobiliario Principal</span>
+            </div>
+            <div class="montaje-grid" data-group="sillas">
+              <!-- Tiffany Dorada -->
+              <div class="montaje-card selected" data-value="tiffany-dorada" data-label="Tiffany Dorada Imperial">
+                <div class="montaje-card-img-wrap">
+                  <img src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=800&q=80" alt="Silla Tiffany Dorada" class="montaje-card-img" />
+                  <div class="montaje-card-radio">
+                    <span class="montaje-card-radio-icon">✓</span>
+                  </div>
+                </div>
+                <div class="montaje-card-body">
+                  <div class="montaje-card-title">Tiffany Dorada Imperial</div>
+                  <div class="montaje-card-desc">Metálica dorada con cojinería blanca acolchada. La reina de bodas y 15 años de gala.</div>
+                  <span class="montaje-card-tag">Clásica de Gala</span>
+                </div>
+              </div>
+
+              <!-- Crossback Madera -->
+              <div class="montaje-card" data-value="crossback-madera" data-label="Crossback Madera Rústica">
+                <div class="montaje-card-img-wrap">
+                  <img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80" alt="Silla Crossback Madera" class="montaje-card-img" />
+                  <div class="montaje-card-radio">
+                    <span class="montaje-card-radio-icon">✓</span>
+                  </div>
+                </div>
+                <div class="montaje-card-body">
+                  <div class="montaje-card-title">Crossback Madera Rústica</div>
+                  <div class="montaje-card-desc">Madera natural con espaldar en cruceta y estilo vintage. La favorita campestre.</div>
+                  <span class="montaje-card-tag">Campestre / Boho</span>
+                </div>
+              </div>
+
+              <!-- Tiffany Blanca -->
+              <div class="montaje-card" data-value="tiffany-blanca" data-label="Tiffany Blanca Glam">
+                <div class="montaje-card-img-wrap">
+                  <img src="https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=800&q=80" alt="Silla Tiffany Blanca" class="montaje-card-img" />
+                  <div class="montaje-card-radio">
+                    <span class="montaje-card-radio-icon">✓</span>
+                  </div>
+                </div>
+                <div class="montaje-card-body">
+                  <div class="montaje-card-title">Tiffany Blanca Glam</div>
+                  <div class="montaje-card-desc">Acabado blanco puro con cojín blanco. Máxima luminosidad, elegancia moderna.</div>
+                  <span class="montaje-card-tag">Moderna / Nupcial</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. DISTRIBUCIÓN DE MESAS -->
+          <div class="montaje-category">
+            <div class="montaje-cat-header">
+              <span class="montaje-cat-title">🏛️ 2. Distribución de Salón & Mesas</span>
+              <span class="montaje-cat-badge">Layout del Salón</span>
+            </div>
+            <div class="montaje-grid" data-group="distribucion">
+              <!-- Mesas Redondas -->
+              <div class="montaje-card selected" data-value="mesas-redondas" data-label="Mesas Redondas Familiares">
+                <div class="montaje-card-img-wrap">
+                  <img src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80" alt="Mesas Redondas" class="montaje-card-img" />
+                  <div class="montaje-card-radio">
+                    <span class="montaje-card-radio-icon">✓</span>
+                  </div>
+                </div>
+                <div class="montaje-card-body">
+                  <div class="montaje-card-title">Mesas Redondas Familiares</div>
+                  <div class="montaje-card-desc">Mesas circulares para 10 personas. Circulación fluida y perfecta conversación entre familias.</div>
+                  <span class="montaje-card-tag">Tradicional & Cómodo</span>
+                </div>
+              </div>
+
+              <!-- Tablones Rústicos -->
+              <div class="montaje-card" data-value="tablones-imperiales" data-label="Tablones Imperiales Alargados">
+                <div class="montaje-card-img-wrap">
+                  <img src="https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80" alt="Tablones Rústicos" class="montaje-card-img" />
+                  <div class="montaje-card-radio">
+                    <span class="montaje-card-radio-icon">✓</span>
+                  </div>
+                </div>
+                <div class="montaje-card-body">
+                  <div class="montaje-card-title">Tablones Imperiales Alargados</div>
+                  <div class="montaje-card-desc">Montaje continuo estilo banquete europeo o campestre para 8 a 10 puestos por módulo.</div>
+                  <span class="montaje-card-tag">Banquete Europeo</span>
+                </div>
+              </div>
+
+              <!-- Distribución Mixta -->
+              <div class="montaje-card" data-value="distribucion-mixta" data-label="Distribución Mixta (Recomendada)">
+                <div class="montaje-card-img-wrap">
+                  <img src="https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=800&q=80" alt="Distribución Mixta" class="montaje-card-img" />
+                  <div class="montaje-card-radio">
+                    <span class="montaje-card-radio-icon">✓</span>
+                  </div>
+                </div>
+                <div class="montaje-card-body">
+                  <div class="montaje-card-title">Distribución Mixta (Recomendada)</div>
+                  <div class="montaje-card-desc">Mesa imperial de honor para novios / anfitriones + mesas redondas para los invitados.</div>
+                  <span class="montaje-card-tag">Más Solicitada</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. MANTELERÍA & PALETA DE COLOR -->
+          <div class="montaje-category">
+            <div class="montaje-cat-header">
+              <span class="montaje-cat-title">🎨 3. Paleta de Mantelería & Caminos</span>
+              <span class="montaje-cat-badge">Armonía Cromática</span>
+            </div>
+            <div class="montaje-grid" data-group="manteleria">
+              <!-- Marfil & Oro -->
+              <div class="montaje-card selected" data-value="marfil-oro" data-label="Marfil & Camino Oro Imperial">
+                <div class="montaje-card-img-wrap">
+                  <img src="https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&w=800&q=80" alt="Marfil y Oro" class="montaje-card-img" />
+                  <div class="montaje-card-radio">
+                    <span class="montaje-card-radio-icon">✓</span>
+                  </div>
+                </div>
+                <div class="montaje-card-body">
+                  <div class="montaje-card-title">Marfil & Camino Oro Imperial</div>
+                  <div class="montaje-card-desc">Mantel base marfil con camino de tela satinada en hilo dorado y servilletas de gala.</div>
+                  <span class="montaje-card-tag">Gala Tradicional</span>
+                </div>
+              </div>
+
+              <!-- Palo de Rosa -->
+              <div class="montaje-card" data-value="palo-rosa" data-label="Palo de Rosa & Acentos Dorados">
+                <div class="montaje-card-img-wrap">
+                  <img src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=800&q=80" alt="Palo de Rosa" class="montaje-card-img" />
+                  <div class="montaje-card-radio">
+                    <span class="montaje-card-radio-icon">✓</span>
+                  </div>
+                </div>
+                <div class="montaje-card-body">
+                  <div class="montaje-card-title">Palo de Rosa & Acentos Dorados</div>
+                  <div class="montaje-card-desc">Tonos pasteles románticos muy cotizados para 15 años y bodas de ensueño al atardecer.</div>
+                  <span class="montaje-card-tag">Romántico & Glam</span>
+                </div>
+              </div>
+
+              <!-- Verde Esmeralda -->
+              <div class="montaje-card" data-value="verde-esmeralda" data-label="Verde Esmeralda & Follaje">
+                <div class="montaje-card-img-wrap">
+                  <img src="https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=800&q=80" alt="Verde Esmeralda" class="montaje-card-img" />
+                  <div class="montaje-card-radio">
+                    <span class="montaje-card-radio-icon">✓</span>
+                  </div>
+                </div>
+                <div class="montaje-card-body">
+                  <div class="montaje-card-title">Verde Esmeralda & Follaje</div>
+                  <div class="montaje-card-desc">Contraste fresco y orgánico ideal para Finca El Peñol y recepciones campestres.</div>
+                  <span class="montaje-card-tag">Campestre Chic</span>
+                </div>
+              </div>
+
+              <!-- Azul Medianoche -->
+              <div class="montaje-card" data-value="azul-medianoche" data-label="Azul Medianoche & Plata">
+                <div class="montaje-card-img-wrap">
+                  <img src="https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=800&q=80" alt="Azul Medianoche" class="montaje-card-img" />
+                  <div class="montaje-card-radio">
+                    <span class="montaje-card-radio-icon">✓</span>
+                  </div>
+                </div>
+                <div class="montaje-card-body">
+                  <div class="montaje-card-title">Azul Medianoche & Plata</div>
+                  <div class="montaje-card-desc">Sobriedad nocturna y distinción. Favorito en grados, aniversarios y recepciones formales.</div>
+                  <span class="montaje-card-tag">Nocturno & Distinguido</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. CENTROS DE MESA -->
+          <div class="montaje-category">
+            <div class="montaje-cat-header">
+              <span class="montaje-cat-title">💐 4. Centros de Mesa & Acentos</span>
+              <span class="montaje-cat-badge">Ambientación Floral</span>
+            </div>
+            <div class="montaje-grid" data-group="centros">
+              <!-- Alto Imperial -->
+              <div class="montaje-card selected" data-value="centro-alto-imperial" data-label="Candelabro / Arreglo Alto">
+                <div class="montaje-card-img-wrap">
+                  <img src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=800&q=80" alt="Centro Alto" class="montaje-card-img" />
+                  <div class="montaje-card-radio">
+                    <span class="montaje-card-radio-icon">✓</span>
+                  </div>
+                </div>
+                <div class="montaje-card-body">
+                  <div class="montaje-card-title">Candelabro / Arreglo Alto</div>
+                  <div class="montaje-card-desc">Estructura metálica dorada esbelta con flores naturales en la cima sin obstruir miradas.</div>
+                  <span class="montaje-card-tag">Imponente</span>
+                </div>
+              </div>
+
+              <!-- Velas Flotantes -->
+              <div class="montaje-card" data-value="velas-flotantes" data-label="Cilindros con Velas Flotantes">
+                <div class="montaje-card-img-wrap">
+                  <img src="https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=800&q=80" alt="Velas Flotantes" class="montaje-card-img" />
+                  <div class="montaje-card-radio">
+                    <span class="montaje-card-radio-icon">✓</span>
+                  </div>
+                </div>
+                <div class="montaje-card-body">
+                  <div class="montaje-card-title">Cilindros con Velas Flotantes</div>
+                  <div class="montaje-card-desc">Trío de cilindros de cristal con agua, velas cálidas flotantes y corona de follaje natural.</div>
+                  <span class="montaje-card-tag">Íntimo & Cálido</span>
+                </div>
+              </div>
+
+              <!-- Guirnalda Corrida -->
+              <div class="montaje-card" data-value="guirnalda-eucalipto" data-label="Guirnalda Corrida de Eucalipto">
+                <div class="montaje-card-img-wrap">
+                  <img src="https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=800&q=80" alt="Guirnalda Eucalipto" class="montaje-card-img" />
+                  <div class="montaje-card-radio">
+                    <span class="montaje-card-radio-icon">✓</span>
+                  </div>
+                </div>
+                <div class="montaje-card-body">
+                  <div class="montaje-card-title">Guirnalda Corrida de Eucalipto</div>
+                  <div class="montaje-card-desc">Camino floral con follaje fresco de eucalipto natural, rosas blancas y veladoras votivas.</div>
+                  <span class="montaje-card-tag">Especial Tablones</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. BACKING & PUNTO FOTOGRÁFICO -->
+          <div class="montaje-category">
+            <div class="montaje-cat-header">
+              <span class="montaje-cat-title">📸 5. Punto de Fotos & Backing de Gala</span>
+              <span class="montaje-cat-badge">Fotocall</span>
+            </div>
+            <div class="montaje-grid" data-group="backing">
+              <!-- Arco Floral -->
+              <div class="montaje-card selected" data-value="arco-floral" data-label="Arco Floral Circular">
+                <div class="montaje-card-img-wrap">
+                  <img src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80" alt="Arco Floral" class="montaje-card-img" />
+                  <div class="montaje-card-radio">
+                    <span class="montaje-card-radio-icon">✓</span>
+                  </div>
+                </div>
+                <div class="montaje-card-body">
+                  <div class="montaje-card-title">Arco Floral Circular / Hexagonal</div>
+                  <div class="montaje-card-desc">Estructura decorada con flores frescas y follaje verde para ceremonias o fotos de gala.</div>
+                  <span class="montaje-card-tag">Nupcial & Ceremonial</span>
+                </div>
+              </div>
+
+              <!-- Letras Gigantes -->
+              <div class="montaje-card" data-value="letras-iluminadas" data-label="Letras Gigantes 'MIS 15' o 'LOVE'">
+                <div class="montaje-card-img-wrap">
+                  <img src="https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=800&q=80" alt="Letras Iluminadas" class="montaje-card-img" />
+                  <div class="montaje-card-radio">
+                    <span class="montaje-card-radio-icon">✓</span>
+                  </div>
+                </div>
+                <div class="montaje-card-body">
+                  <div class="montaje-card-title">Letras Gigantes 'MIS 15' o 'LOVE'</div>
+                  <div class="montaje-card-desc">Letras luminosas de 1.20 metros con iluminación vintage cálida. Punto imperdible.</div>
+                  <span class="montaje-card-tag">Punto Estrella</span>
+                </div>
+              </div>
+
+              <!-- Pared Shimmer & Neón -->
+              <div class="montaje-card" data-value="shimmer-neon" data-label="Pared Shimmer & Neón">
+                <div class="montaje-card-img-wrap">
+                  <img src="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80" alt="Pared Shimmer y Neón" class="montaje-card-img" />
+                  <div class="montaje-card-radio">
+                    <span class="montaje-card-radio-icon">✓</span>
+                  </div>
+                </div>
+                <div class="montaje-card-body">
+                  <div class="montaje-card-title">Pared de Brillo (Shimmer) & Neón</div>
+                  <div class="montaje-card-desc">Muro brillante con lentejuelas doradas o plateadas y letrero LED neón personalizado.</div>
+                  <span class="montaje-card-tag">Glam & Fiesta</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6. OBSERVACIONES ESPECIALES -->
+          <div>
+            <label for="montajeNotas" class="block text-xs font-semibold text-zinc-300 mb-2">
+              📝 Peticiones Especiales de Ubicación o Montaje (Opcional):
+            </label>
+            <textarea id="montajeNotas" rows="2" placeholder="Ej: Mesa de niños cerca a la salida del salón, ubicar mesa de novios frente a la pista de baile..." class="w-full px-4 py-3 bg-zinc-900 border border-zinc-700/80 rounded-xl text-white text-sm focus:outline-none focus:border-amber-400 leading-relaxed"></textarea>
+          </div>
+
+          <!-- BARRA DE RESUMEN Y ACCIONES -->
+          <div class="montaje-summary-bar">
+            <div>
+              <span class="text-xs text-zinc-400 block mb-1.5 font-semibold">Configuración Seleccionada:</span>
+              <div class="montaje-summary-list" id="montajeSummaryList">
+                <span class="montaje-summary-item">🪑 <strong id="sumSillas">Tiffany Dorada</strong></span>
+                <span class="montaje-summary-item">🏛️ <strong id="sumDistribucion">Mesas Redondas</strong></span>
+                <span class="montaje-summary-item">🎨 <strong id="sumManteleria">Marfil & Oro</strong></span>
+                <span class="montaje-summary-item">💐 <strong id="sumCentros">Candelabro Alto</strong></span>
+                <span class="montaje-summary-item">📸 <strong id="sumBacking">Arco Floral</strong></span>
+              </div>
+            </div>
+
+            <div class="flex gap-3 flex-wrap">
+              <button type="submit" id="btnGuardarMontaje" class="btn-apple-primary px-6 py-2.5 text-sm font-semibold inline-flex items-center gap-2">
+                💾 Guardar Configuración
+              </button>
+              <button type="button" id="btnCompartirMontajeWa" class="btn-apple-secondary px-5 py-2.5 text-sm font-semibold inline-flex items-center gap-2">
+                💬 Compartir por WhatsApp
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- MODAL DE MEDIOS DE PAGO Y REPORTAR ABONO -->
+      <div id="paymentModal" class="apple-modal-overlay">
+        <div class="apple-modal-content max-w-2xl">
+          <button class="apple-modal-close" id="btnClosePaymentModal">&times;</button>
+          
+          <div class="text-center mb-6">
+            <span class="text-[11px] uppercase tracking-wider text-amber-300 font-bold">Canales Financieros Oficiales</span>
+            <h2 class="font-serif text-white text-2xl font-bold mt-1">
+              Medios de Pago y Abonos
+            </h2>
+            <p class="text-xs text-zinc-400 max-w-md mx-auto mt-2">
+              Realiza transferencias seguras directas a las cuentas oficiales de Banquetes Almar en Marinilla.
+            </p>
+          </div>
+
+          <!-- TARJETAS DE MÉTODOS DE PAGO -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            <!-- BANCOLOMBIA -->
+            <div class="bg-white/5 border border-zinc-800 rounded-xl p-5">
+              <div class="flex justify-between items-center mb-2">
+                <strong class="text-white text-sm font-semibold">🟡 Bancolombia</strong>
+                <span class="text-[11px] text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">Ahorros</span>
+              </div>
+              <p class="text-xs text-zinc-400 mb-1">Cuenta de Ahorros Oficial:</p>
+              <div class="flex justify-between items-center bg-zinc-950 px-3 py-2 rounded-lg border border-white/5">
+                <span class="font-mono text-sm text-white font-bold" id="bancolombiaAcc">108-923847-12</span>
+                <button type="button" class="btn-copy text-xs text-amber-300 underline cursor-pointer hover:text-amber-200" onclick="navigator.clipboard.writeText('10892384712'); this.textContent='¡Copiado!'; setTimeout(()=>this.textContent='Copiar', 2000);">Copiar</button>
+              </div>
+              <p class="text-[11px] text-zinc-500 mt-2">Titular: Banquetes Almar S.A.S. • NIT: 901.458.231-8</p>
+            </div>
+
+            <!-- NEQUI / DAVIPLATA -->
+            <div class="bg-white/5 border border-zinc-800 rounded-xl p-5">
+              <div class="flex justify-between items-center mb-2">
+                <strong class="text-white text-sm font-semibold">🟣 Nequi / Daviplata / Bre-B</strong>
+                <span class="text-[11px] text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">Digital</span>
+              </div>
+              <p class="text-xs text-zinc-400 mb-1">Línea Corporativa Oficial:</p>
+              <div class="flex justify-between items-center bg-zinc-950 px-3 py-2 rounded-lg border border-white/5">
+                <span class="font-mono text-sm text-white font-bold" id="nequiAcc">310 445 8892</span>
+                <button type="button" class="btn-copy text-xs text-amber-300 underline cursor-pointer hover:text-amber-200" onclick="navigator.clipboard.writeText('3104458892'); this.textContent='¡Copiado!'; setTimeout(()=>this.textContent='Copiar', 2000);">Copiar</button>
+              </div>
+              <p class="text-[11px] text-zinc-500 mt-2">Acepta transferencias directas por Bre-B, Transfiya y Nequi</p>
+            </div>
+          </div>
+
+          <!-- FORMULARIO REPORTAR ABONO -->
+          <div class="bg-white/5 border border-zinc-800 rounded-xl p-6">
+            <h4 class="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+              <span>📝</span> Reportar Abono o Comprobante Realizado
+            </h4>
+            <form id="reportPaymentForm" class="flex flex-col gap-3">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-zinc-300 mb-1">Monto Abonado (COP) *</label>
+                  <input type="number" id="abonoMonto" required placeholder="Ej: 2000000" min="10000" step="50000" class="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-700/80 rounded-lg text-white text-sm focus:outline-none focus:border-amber-400" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-zinc-300 mb-1">Canal Utilizado *</label>
+                  <select id="abonoMetodo" class="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-700/80 rounded-lg text-white text-sm focus:outline-none focus:border-amber-400">
+                    <option value="Transferencia Bancolombia">Transferencia Bancolombia</option>
+                    <option value="Nequi">Nequi</option>
+                    <option value="Daviplata">Daviplata</option>
+                    <option value="Efectivo en Salón Marinilla">Efectivo en Salón Marinilla</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-zinc-300 mb-1">Número de Comprobante / Aprobación (Opcional)</label>
+                <input type="text" id="abonoReferencia" placeholder="Ej: Comprobante #1048293 o últimos 4 dígitos" class="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-700/80 rounded-lg text-white text-sm focus:outline-none focus:border-amber-400" />
+              </div>
+
+              <button type="submit" class="btn-apple-primary w-full justify-center py-3 text-sm font-semibold mt-2">
+                📲 Registrar y Enviar Soporte por WhatsApp
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script type="module">
+    import { dbService } from "./js/firebase/db.js";
+
+    const form = document.getElementById("portalLookupForm");
+    const queryInput = document.getElementById("lookupQuery");
+
+    // Modal de Pagos
+    const paymentModal = document.getElementById("paymentModal");
+    const btnOpenPaymentModal = document.getElementById("btnOpenPaymentModal");
+    const btnClosePaymentModal = document.getElementById("btnClosePaymentModal");
+    const reportPaymentForm = document.getElementById("reportPaymentForm");
+
+    let reservaActual = null;
+
+    if (btnOpenPaymentModal && paymentModal) {
+      btnOpenPaymentModal.addEventListener("click", () => {
+        paymentModal.classList.add("open");
+      });
+    }
+
+    if (btnClosePaymentModal && paymentModal) {
+      btnClosePaymentModal.addEventListener("click", () => {
+        paymentModal.classList.remove("open");
+      });
+    }
+
+    if (paymentModal) {
+      paymentModal.addEventListener("click", (e) => {
+        if (e.target === paymentModal) paymentModal.classList.remove("open");
+      });
+    }
+
+    // Elementos del dashboard
+    const eventDetailsSection = document.getElementById("eventDetailsSection");
+    const eventNotFound = document.getElementById("eventNotFound");
+    const clientStatusBadge = document.getElementById("clientStatusBadge");
+    const clientEventTitle = document.getElementById("clientEventTitle");
+    const clientVenueText = document.getElementById("clientVenueText");
+    const clientCodeDisplay = document.getElementById("clientCodeDisplay");
+    const clientEventDate = document.getElementById("clientEventDate");
+    const clientGuestsCount = document.getElementById("clientGuestsCount");
+
+    const totalInversionDisplay = document.getElementById("totalInversionDisplay");
+    const totalAbonadoDisplay = document.getElementById("totalAbonadoDisplay");
+    const saldoPendienteDisplay = document.getElementById("saldoPendienteDisplay");
+    const paymentPercentageText = document.getElementById("paymentPercentageText");
+    const paymentProgressBar = document.getElementById("paymentProgressBar");
+    const paymentHistoryBody = document.getElementById("paymentHistoryBody");
+    const btnDownloadContract = document.getElementById("btnDownloadContract");
+
+    let countdownInterval = null;
+
+    // ------------------- SELECTOR DE MONTAJE Y GALA -------------------
+    const montajeForm = document.getElementById("montajeForm");
+    const montajeStatusBadge = document.getElementById("montajeStatusBadge");
+    const btnGuardarMontaje = document.getElementById("btnGuardarMontaje");
+    const btnCompartirMontajeWa = document.getElementById("btnCompartirMontajeWa");
+    const montajeNotas = document.getElementById("montajeNotas");
+
+    const summaryLabels = {
+      sillas: document.getElementById("sumSillas"),
+      distribucion: document.getElementById("sumDistribucion"),
+      manteleria: document.getElementById("sumManteleria"),
+      centros: document.getElementById("sumCentros"),
+      backing: document.getElementById("sumBacking")
+    };
+
+    function initMontajeSelector() {
+      const grids = document.querySelectorAll(".montaje-grid");
+      grids.forEach(grid => {
+        const group = grid.dataset.group;
+        const cards = grid.querySelectorAll(".montaje-card");
+        cards.forEach(card => {
+          card.addEventListener("click", () => {
+            cards.forEach(c => c.classList.remove("selected"));
+            card.classList.add("selected");
+            if (summaryLabels[group]) {
+              summaryLabels[group].textContent = card.dataset.label || card.dataset.value;
+            }
+          });
+        });
+      });
+    }
+
+    function getMontajeSeleccionado() {
+      const groups = ["sillas", "distribucion", "manteleria", "centros", "backing"];
+      const result = {
+        observaciones: montajeNotas ? montajeNotas.value.trim() : "",
+        estado: "Confirmado",
+        ultimaActualizacion: new Date().toISOString()
+      };
+
+      groups.forEach(group => {
+        const card = document.querySelector(`.montaje-grid[data-group="${group}"] .montaje-card.selected`);
+        result[group] = card ? card.dataset.value : "";
+        result[`${group}Label`] = card ? card.dataset.label : "";
+      });
+
+      return result;
+    }
+
+    function cargarMontajeReserva(montaje) {
+      if (!montaje) {
+        if (montajeStatusBadge) {
+          montajeStatusBadge.textContent = "🟡 Pendiente por Definir";
+          montajeStatusBadge.className = "text-xs px-3 py-1 rounded-full border border-amber-500/40 bg-amber-500/10 text-amber-300 font-semibold";
+        }
+        return;
+      }
+
+      const groups = ["sillas", "distribucion", "manteleria", "centros", "backing"];
+      groups.forEach(group => {
+        const val = montaje[group];
+        if (val) {
+          const grid = document.querySelector(`.montaje-grid[data-group="${group}"]`);
+          if (grid) {
+            const card = grid.querySelector(`.montaje-card[data-value="${val}"]`);
+            if (card) {
+              grid.querySelectorAll(".montaje-card").forEach(c => c.classList.remove("selected"));
+              card.classList.add("selected");
+              if (summaryLabels[group]) {
+                summaryLabels[group].textContent = card.dataset.label || val;
+              }
+            }
+          }
+        }
+      });
+
+      if (montajeNotas && montaje.observaciones !== undefined) {
+        montajeNotas.value = montaje.observaciones;
+      }
+
+      if (montajeStatusBadge) {
+        montajeStatusBadge.textContent = "🟢 Confirmado por Anfitrión";
+        montajeStatusBadge.className = "text-xs px-3 py-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 font-semibold";
+      }
+    }
+
+    if (montajeForm) {
+      montajeForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!reservaActual) {
+          if (window.Swal) {
+            Swal.fire({
+              icon: "warning",
+              title: "Consulta tu Evento",
+              text: "Primero consulta tu evento con tu número de teléfono o código de reserva para guardar tu montaje."
+            });
+          }
+          return;
+        }
+
+        const data = getMontajeSeleccionado();
+
+        if (btnGuardarMontaje) {
+          btnGuardarMontaje.disabled = true;
+          btnGuardarMontaje.textContent = "💾 Guardando...";
+        }
+
+        try {
+          await dbService.updateReservation(reservaActual.id, { montaje: data });
+          reservaActual.montaje = data;
+
+          if (montajeStatusBadge) {
+            montajeStatusBadge.textContent = "🟢 Confirmado por Anfitrión";
+            montajeStatusBadge.className = "text-xs px-3 py-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 font-semibold";
+          }
+
+          if (window.Swal) {
+            Swal.fire({
+              icon: "success",
+              title: "¡Montaje Guardado con Éxito!",
+              html: `
+                <p class="text-zinc-300 text-sm">Tu selección de mobiliario y estilo ha quedado registrada en el sistema de Banquetes Almar.</p>
+                <p class="text-zinc-400 text-xs mt-2">Puedes compartirlo directamente por WhatsApp con tu coordinador de evento.</p>
+              `,
+              confirmButtonText: "Entendido"
+            });
+          }
+        } catch (err) {
+          console.error("Error al guardar montaje:", err);
+          if (window.Swal) {
+            Swal.fire({
+              icon: "error",
+              title: "Error",
+              text: "No fue posible guardar el montaje en este momento. Por favor intenta de nuevo."
+            });
+          }
+        } finally {
+          if (btnGuardarMontaje) {
+            btnGuardarMontaje.disabled = false;
+            btnGuardarMontaje.textContent = "💾 Guardar Configuración";
+          }
+        }
+      });
+    }
+
+    if (btnCompartirMontajeWa) {
+      btnCompartirMontajeWa.addEventListener("click", () => {
+        if (!reservaActual) {
+          if (window.Swal) {
+            Swal.fire({
+              icon: "warning",
+              title: "Consulta tu Evento",
+              text: "Primero consulta tu evento para compartir tu selección de montaje."
+            });
+          }
+          return;
+        }
+
+        const m = getMontajeSeleccionado();
+        const msg = 
+`✨ *SELECCIÓN DE MONTAJE Y GALA - BANQUETES ALMAR* ✨
+──────────────────────────────
+👤 *Anfitrión:* ${reservaActual.cliente}
+🔖 *Código:* ALM-${reservaActual.id.slice(-6).toUpperCase()}
+📅 *Fecha:* ${reservaActual.fecha_evento}
+🏛️ *Locación:* ${reservaActual.locacion || reservaActual.lugar}
+👥 *Invitados:* ${reservaActual.personas || 0} personas
+──────────────────────────────
+🪑 *Sillas:* ${m.sillasLabel || m.sillas}
+🏛️ *Distribución:* ${m.distribucionLabel || m.distribucion}
+🎨 *Mantelería:* ${m.manteleriaLabel || m.manteleria}
+💐 *Centros de Mesa:* ${m.centrosLabel || m.centros}
+📸 *Backing / Fotos:* ${m.backingLabel || m.backing}
+${m.observaciones ? `📝 *Observaciones:* ${m.observaciones}\n` : ""}──────────────────────────────
+Configurado en vivo en el Portal VIP de Clientes Banquetes Almar.`;
+
+        window.open(`https://wa.me/573104458892?text=${encodeURIComponent(msg)}`, "_blank");
+      });
+    }
+
+    // Función de búsqueda inteligente
+    async function consultarEvento(query) {
+      if (!query) {
+        if (eventDetailsSection) eventDetailsSection.classList.add("hidden");
+        if (eventNotFound) eventNotFound.classList.add("hidden");
+        return;
+      }
+
+      const clean = String(query || "").replace(/\D/g, "");
+      const q = String(query).toLowerCase().trim();
+      const reservas = await dbService.getReservations();
+      const pagos = await dbService.getPayments();
+
+      const encontrada = reservas.find(r => {
+        const telClean = String(r.telefono || "").replace(/\D/g, "");
+        const idClean = String(r.id || "").toLowerCase();
+        const codeClean = `alm-${String(r.id || "").slice(-6)}`.toLowerCase();
+        const clientName = String(r.cliente || "").toLowerCase();
+
+        if (clean && clean.length >= 7 && telClean.includes(clean)) return true;
+        if (idClean === q || codeClean === q) return true;
+        if (q.length >= 4 && clientName.includes(q)) return true;
+        return false;
+      });
+
+      if (!encontrada) {
+        reservaActual = null;
+        if (eventDetailsSection) eventDetailsSection.classList.add("hidden");
+        if (eventNotFound) eventNotFound.classList.remove("hidden");
+        return;
+      }
+
+      if (eventNotFound) eventNotFound.classList.add("hidden");
+      if (eventDetailsSection) eventDetailsSection.classList.remove("hidden");
+      reservaActual = encontrada;
+
+      // Renderizar datos del evento
+      clientStatusBadge.textContent = encontrada.estado || "Confirmada";
+      clientEventTitle.textContent = `${encontrada.tipo_evento || "Evento"} • ${encontrada.cliente || "Cliente"}`;
+      clientVenueText.textContent = `📍 ${encontrada.locacion || encontrada.lugar || "Salón Almar Marinilla"}`;
+      clientCodeDisplay.textContent = `ALM-${encontrada.id.slice(-6).toUpperCase()}`;
+      clientEventDate.textContent = encontrada.fecha_evento || "Por definir";
+      clientGuestsCount.textContent = `${encontrada.personas || 0} personas`;
+
+      if (btnDownloadContract) {
+        btnDownloadContract.href = `./admin/contrato.html?id=${encontrada.id}&mode=client`;
+      }
+
+      // Financiero en tiempo real
+      const total = Number(encontrada.total || encontrada.valor_total || 0);
+      const abono = Number(encontrada.anticipo || encontrada.abono || 0);
+      const saldo = Number(encontrada.saldo !== undefined ? encontrada.saldo : Math.max(0, total - abono));
+      const pct = total > 0 ? Math.min(100, Math.round((abono / total) * 100)) : 0;
+
+      totalInversionDisplay.textContent = `$${total.toLocaleString("es-CO")} COP`;
+      totalAbonadoDisplay.textContent = `$${abono.toLocaleString("es-CO")} COP`;
+      saldoPendienteDisplay.textContent = `$${saldo.toLocaleString("es-CO")} COP`;
+      paymentPercentageText.textContent = `${pct}% Pagado`;
+      paymentProgressBar.style.width = `${pct}%`;
+
+      // Pagos de la reserva
+      const pagosReserva = pagos.filter(p => String(p.reservaId) === String(encontrada.id));
+      if (pagosReserva.length > 0) {
+        paymentHistoryBody.innerHTML = pagosReserva.map(p => `
+          <tr>
+            <td>${p.fecha || new Date().toISOString().slice(0, 10)}</td>
+            <td>${p.concepto || p.nota || "Abono"}</td>
+            <td>${p.metodo || "Transferencia"}</td>
+            <td class="text-right text-emerald-400 font-bold">+$${Number(p.monto || 0).toLocaleString("es-CO")}</td>
+          </tr>
+        `).join("");
+      } else {
+        paymentHistoryBody.innerHTML = `
+          <tr>
+            <td colspan="4" class="text-center text-zinc-400 p-6">
+              No se registran abonos en el sistema aún para esta reserva.
+            </td>
+          </tr>
+        `;
+      }
+
+      // Cargar configuración de montaje previa si existe
+      cargarMontajeReserva(encontrada.montaje);
+
+      // Cuenta regresiva precisa
+      iniciarCuentaRegresiva(encontrada.fecha_evento);
+    }
+
+    function iniciarCuentaRegresiva(fechaStr) {
+      if (countdownInterval) clearInterval(countdownInterval);
+      if (!fechaStr) return;
+      const target = new Date(fechaStr + "T16:00:00").getTime();
+
+      function update() {
+        const now = new Date().getTime();
+        const diff = target - now;
+
+        if (diff <= 0) {
+          document.getElementById("cdDays").textContent = "0";
+          document.getElementById("cdHours").textContent = "0";
+          document.getElementById("cdMinutes").textContent = "0";
+          document.getElementById("cdSeconds").textContent = "0";
+          return;
+        }
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        document.getElementById("cdDays").textContent = days;
+        document.getElementById("cdHours").textContent = hours;
+        document.getElementById("cdMinutes").textContent = minutes;
+        document.getElementById("cdSeconds").textContent = seconds;
+      }
+
+      update();
+      countdownInterval = setInterval(update, 1000);
+    }
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      consultarEvento(queryInput.value.trim());
+    });
+
+    // Envío del Reporte de Pago
+    if (reportPaymentForm) {
+      reportPaymentForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const monto = Number(document.getElementById("abonoMonto").value || 0);
+        const metodo = document.getElementById("abonoMetodo").value;
+        const ref = document.getElementById("abonoReferencia").value.trim() || "Sin ref";
+
+        if (!reservaActual || monto <= 0) return;
+
+        // 1. Guardar en Base de Datos
+        await dbService.createPayment({
+          reservaId: reservaActual.id,
+          cliente: reservaActual.cliente,
+          monto: monto,
+          metodo: metodo,
+          concepto: `Abono reportado por anfitrión (Ref: ${ref})`,
+          fecha: new Date().toISOString().slice(0, 10),
+          estado: "Pendiente Verificación"
+        });
+
+        // 2. Cerrar Modal y refrescar vista
+        paymentModal.classList.remove("open");
+        await consultarEvento(queryInput.value.trim() || reservaActual.telefono);
+
+        if (window.Swal) {
+          Swal.fire({
+            icon: "success",
+            title: "¡Abono Registrado!",
+            html: `<p class="text-slate-300">Tu reporte de abono por <strong>$${monto.toLocaleString("es-CO")} COP</strong> ha sido registrado.</p><p class="text-slate-400 text-sm mt-1">Enseguida se abrirá WhatsApp para que adjuntes la captura de tu comprobante.</p>`,
+            confirmButtonText: "Entendido"
+          });
+        }
+
+        // 3. Abrir WhatsApp para enviar el comprobante fotográfico
+        const msg = 
+`💳 *REPORTE DE ABONO - BANQUETES ALMAR* 💳
+──────────────────────────────
+👤 *Anfitrión:* ${reservaActual.cliente}
+🔖 *Código de Evento:* ALM-${reservaActual.id.slice(-6).toUpperCase()}
+📅 *Fecha Evento:* ${reservaActual.fecha_evento}
+🏛️ *Locación:* ${reservaActual.locacion || reservaActual.lugar}
+──────────────────────────────
+💰 *Monto Abonado:* $${monto.toLocaleString("es-CO")} COP
+🏦 *Método / Canal:* ${metodo}
+🔢 *No. Comprobante:* ${ref}
+──────────────────────────────
+Adjunto en esta conversación la captura/foto del comprobante de transferencia para confirmación oficial.`;
+
+        window.open(`https://wa.me/573104458892?text=${encodeURIComponent(msg)}`, "_blank");
+      });
+    }
+
+    // Inicializar selector interactivo de montaje
+    initMontajeSelector();
+
+    // Consulta inicial: lee parámetros de URL (?tel=, ?id=, ?query=)
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialQuery = urlParams.get("query") || urlParams.get("tel") || urlParams.get("id");
+    if (initialQuery) {
+      if (queryInput) queryInput.value = initialQuery;
+      consultarEvento(initialQuery);
+    }
+  </script>
+</body>
+</html>

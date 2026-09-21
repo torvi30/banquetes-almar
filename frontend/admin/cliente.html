@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ficha Integral de Cliente | Banquetes Almar</title>
+  <link rel="icon" type="image/png" href="../images/logo-almar.png" />
+  <link rel="apple-touch-icon" href="../images/logo-almar.png" />
+  <meta name="theme-color" content="#0b0b0b" />
+  <link rel="stylesheet" href="../css/tailwind.css" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="../js/alerts-luxury.js?v=20260909.5"></script>
+</head>
+<body>
+  <header id="adminNavbar"></header>
+
+  <section class="section admin-panel">
+    <div class="container">
+      <div class="flex justify-between items-center mb-6 flex-wrap gap-2.5">
+        <a href="./clientes.html" class="btn btn-secondary btn-sm inline-flex items-center gap-1.5">
+          ← Volver al Directorio de Clientes
+        </a>
+        <a href="./reservas.html" class="btn btn-secondary btn-sm text-amber-300">
+          📅 Agenda & Calendario de Eventos
+        </a>
+      </div>
+
+      <!-- HERO PERFIL DEL CLIENTE -->
+      <div id="clienteHeroCard" class="client-profile-hero">
+        <div class="text-center py-8 text-slate-400">
+          Cargando ficha del cliente...
+        </div>
+      </div>
+
+      <!-- TARJETAS DE RESUMEN FINANCIERO -->
+      <div class="pipeline-metrics-banner mb-10" id="clientFinancialSummary">
+        <div class="pipeline-metric-card">
+          <span class="pipeline-metric-label">📅 Eventos Registrados</span>
+          <strong id="kpiEventosCount" class="pipeline-metric-val">0</strong>
+        </div>
+
+        <div class="pipeline-metric-card">
+          <span class="pipeline-metric-label">💰 Facturación Total (LTV)</span>
+          <strong id="kpiTotalContratado" class="pipeline-metric-val highlight-gold">$0</strong>
+        </div>
+
+        <div class="pipeline-metric-card">
+          <span class="pipeline-metric-label">💵 Total Pagado / Abonos</span>
+          <strong id="kpiTotalPagado" class="pipeline-metric-val text-emerald-500">$0</strong>
+        </div>
+
+        <div class="pipeline-metric-card">
+          <span class="pipeline-metric-label">⏳ Saldo Pendiente</span>
+          <strong id="kpiSaldoPendiente" class="pipeline-metric-val text-rose-500">$0</strong>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 1: EVENTOS Y RESERVAS DEL CLIENTE -->
+      <div class="section-heading mt-10 mb-5">
+        <p class="section-label">Historial Operativo</p>
+        <h2>Eventos y Celebraciones del Cliente</h2>
+        <p>Recepciones, bodas, quinceaños y alquiler de mobiliario asociados a este anfitrión.</p>
+      </div>
+      <div id="eventosCliente" class="quotes-grid mb-12"></div>
+
+      <!-- SECCIÓN 2: HISTORIAL DE PAGOS Y ABONOS -->
+      <div class="section-heading mt-10 mb-5">
+        <p class="section-label">Libro Contable</p>
+        <h2>Comprobantes y Pagos Registrados</h2>
+        <p>Registro de anticipos, abonos parciales y liquidaciones de saldo.</p>
+      </div>
+      <div id="pagosCliente" class="quotes-grid"></div>
+    </div>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script type="module" src="../js/components/admin-navbar.js"></script>
+  <script type="module" src="../js/cliente-admin.js?v=20260917.2"></script>
+</body>
+</html>

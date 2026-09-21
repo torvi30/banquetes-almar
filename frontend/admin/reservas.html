@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Eventos & Agenda | Banquetes Almar</title>
+  <link rel="icon" type="image/png" href="../images/logo-almar.png" />
+  <link rel="apple-touch-icon" href="../images/logo-almar.png" />
+  <meta name="theme-color" content="#0b0b0b" />
+  <link rel="stylesheet" href="../css/tailwind.css" />
+</head>
+<body>
+  <header id="adminNavbar"></header>
+
+  <section class="section admin-panel">
+    <div class="container">
+      <div class="section-heading">
+        <p class="section-label">Suite Ejecutiva</p>
+        <h2>Eventos & Agenda de Gala</h2>
+        <p>Control integral de celebraciones confirmadas, fechas, contratos y disponibilidad en Marinilla y El Peñol.</p>
+      </div>
+
+      <!-- SELECTOR DE VISTA UNIFICADA (LISTA / CALENDARIO) -->
+      <div class="agenda-view-switch-bar">
+        <div class="agenda-view-switch">
+          <button type="button" class="agenda-switch-btn active" id="btnViewList">
+            <span>📋 Lista de Eventos</span>
+          </button>
+          <button type="button" class="agenda-switch-btn" id="btnViewCalendar">
+            <span>📆 Calendario Mensual</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- VISTA 1: LISTA Y REGISTRO DE EVENTOS -->
+      <div id="viewListContainer">
+        <!-- FORMULARIO DE EVENTO / RESERVA -->
+        <div class="dashboard-panel mb-8">
+          <div class="dashboard-panel-head">
+            <div>
+              <p class="dashboard-mini-label">Programación</p>
+              <h3 id="formEventTitle">Registrar nuevo evento</h3>
+            </div>
+          </div>
+
+          <form id="reservationForm" class="quote-form">
+            <input type="hidden" id="reservationId" />
+
+            <div class="form-group">
+              <label for="cliente">Nombre del cliente *</label>
+              <input type="text" id="cliente" placeholder="Ej: Mariana Gómez" required />
+            </div>
+
+            <div class="form-group">
+              <label for="telefono">Teléfono / WhatsApp *</label>
+              <input type="text" id="telefono" placeholder="Ej: 314 884 9011" required />
+            </div>
+
+            <div class="form-group">
+              <label for="tipo_evento">Tipo de celebración *</label>
+              <input type="text" id="tipo_evento" placeholder="Ej: Boda Campestre, 15 Años, Grado" required />
+            </div>
+
+            <div class="form-group">
+              <label for="fecha_evento">Fecha del evento *</label>
+              <input type="date" id="fecha_evento" required />
+            </div>
+
+            <div class="form-group">
+              <label for="lugar">Locación / Salón</label>
+              <input type="text" id="lugar" placeholder="Salón Marinilla / Finca El Peñol / Externa" />
+            </div>
+
+            <div class="form-group">
+              <label for="personas">Número de invitados</label>
+              <input type="number" id="personas" min="1" placeholder="Ej: 100" />
+            </div>
+
+            <div class="form-group">
+              <label for="estado">Estado del evento</label>
+              <select id="estado">
+                <option value="Confirmada">💍 Confirmada</option>
+                <option value="Pendiente">⏳ Pendiente</option>
+                <option value="Finalizada">✅ Finalizada</option>
+                <option value="Cancelada">❌ Cancelada</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="totalEvento">Valor total cotizado ($)</label>
+              <input type="number" id="totalEvento" placeholder="Ej: 14500000" />
+            </div>
+
+            <div class="form-group full-width">
+              <label for="observaciones">Detalles del montaje, menú y notas</label>
+              <textarea id="observaciones" rows="3" placeholder="Sillas Tiffany, centros de mesa altos, menú gourmet..."></textarea>
+            </div>
+
+            <div class="form-group full-width event-form-actions">
+              <button type="submit" class="btn btn-primary" id="saveReservationBtn">Guardar evento</button>
+              <button type="button" class="btn btn-secondary hidden" id="cancelEditBtn">Cancelar edición</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- FILTROS Y BÚSQUEDA DE EVENTOS -->
+        <div class="bg-[#111115] border border-white/10 rounded-2xl p-5 mb-8 flex flex-wrap gap-4 items-center justify-between">
+          <div class="flex gap-3 flex-wrap flex-grow">
+            <input type="text" id="filterSearch" placeholder="🔍 Buscar por cliente, evento o locación..." class="min-w-[250px] flex-grow px-4 py-2.5 rounded-full bg-white/5 border border-white/10 text-white outline-none focus:border-amber-400" />
+            <select id="filterEstado" class="px-4 py-2.5 rounded-full bg-stone-900 border border-white/10 text-white outline-none focus:border-amber-400">
+              <option value="">Todos los estados</option>
+              <option value="Confirmada">Confirmadas</option>
+              <option value="Pendiente">Pendientes</option>
+              <option value="Finalizada">Finalizadas</option>
+              <option value="Cancelada">Canceladas</option>
+            </select>
+            <input type="date" id="filterFecha" class="px-4 py-2.5 rounded-full bg-stone-900 border border-white/10 text-white outline-none focus:border-amber-400" />
+          </div>
+          <p id="eventsCounter" class="text-white/60 text-sm m-0">Cargando eventos...</p>
+        </div>
+
+        <!-- CUADRÍCULA DE EVENTOS -->
+        <div id="reservationsGrid" class="quotes-grid"></div>
+      </div>
+
+      <!-- VISTA 2: CALENDARIO MENSUAL INTERACTIVO DE GALA -->
+      <div id="viewCalendarContainer" class="hidden">
+        <div class="cal-wrapper">
+          <!-- Barra Superior con Navegación, Título y Mini KPIs -->
+          <div class="cal-top-bar">
+            <div class="cal-nav-group">
+              <button id="prevMonth" class="cal-nav-btn" type="button" title="Mes anterior">◀</button>
+              <button id="btnToday" class="cal-today-btn" type="button">Hoy</button>
+              <button id="nextMonth" class="cal-nav-btn" type="button" title="Mes siguiente">▶</button>
+            </div>
+
+            <h3 id="monthTitle" class="cal-month-title"></h3>
+
+            <!-- Métricas resumidas de este mes -->
+            <div class="cal-month-stats">
+              <span class="cal-stat-pill" id="statMonthCount">💍 <strong>0</strong> eventos</span>
+              <span class="cal-stat-pill" id="statMonthAmount">💰 <strong>$0</strong></span>
+            </div>
+          </div>
+
+          <!-- Barra de Leyenda de Estados y Filtro por Locación -->
+          <div class="cal-legend-bar">
+            <div class="cal-legend-items">
+              <span class="cal-legend-tag"><span class="cal-dot confirmada"></span> Confirmado</span>
+              <span class="cal-legend-tag"><span class="cal-dot pendiente"></span> Pendiente</span>
+              <span class="cal-legend-tag"><span class="cal-dot finalizada"></span> Finalizado</span>
+              <span class="cal-legend-tag"><span class="cal-dot cancelada"></span> Cancelado</span>
+            </div>
+
+            <div class="flex gap-2 items-center">
+              <small class="text-white/60 text-xs">Filtrar locación:</small>
+              <select id="calFilterLocacion" class="bg-stone-900 border border-amber-400/30 text-white rounded-md px-2.5 py-1 text-xs outline-none focus:border-amber-400">
+                <option value="">Todas las locaciones</option>
+                <option value="Marinilla">Salón Marinilla</option>
+                <option value="Peñol">Finca El Peñol</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Cabecera de Días de la Semana -->
+          <div class="cal-weekdays-grid">
+            <div class="cal-weekday-name">Lun</div>
+            <div class="cal-weekday-name">Mar</div>
+            <div class="cal-weekday-name">Mié</div>
+            <div class="cal-weekday-name">Jue</div>
+            <div class="cal-weekday-name">Vie</div>
+            <div class="cal-weekday-name weekend">Sáb ⭐</div>
+            <div class="cal-weekday-name weekend">Dom ⭐</div>
+          </div>
+
+          <!-- Cuadrícula Interactiva de Días -->
+          <div id="calendarGrid" class="cal-days-grid"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODAL DE DETALLES DEL DÍA / EVENTOS AGENDADOS -->
+  <div id="calendarDayModal" class="cal-day-modal">
+    <div class="cal-modal-card">
+      <div class="flex justify-between items-start border-b border-amber-400/30 pb-4 mb-5">
+        <div>
+          <span class="text-xs text-amber-300 uppercase font-bold tracking-wider">Agenda Banquetes Almar</span>
+          <h3 id="calModalDateTitle" class="text-white text-xl mt-1 font-serif">
+            -
+          </h3>
+        </div>
+        <button type="button" id="closeCalModalBtn" class="bg-white/10 border border-white/20 text-white w-8 h-8 rounded-full inline-flex items-center justify-center text-base cursor-pointer hover:bg-white/20 transition-colors">✕</button>
+      </div>
+
+      <div id="calModalEventsList" class="flex flex-col gap-4">
+        <!-- Inyectado dinámicamente -->
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script type="module" src="../js/components/admin-navbar.js"></script>
+  <script type="module" src="../js/reservas-admin.js?v=20260908.1"></script>
+</body>
+</html>

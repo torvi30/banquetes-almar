@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inventario & Mobiliario | Banquetes Almar</title>
+  <link rel="icon" type="image/png" href="../images/logo-almar.png" />
+  <link rel="apple-touch-icon" href="../images/logo-almar.png" />
+  <meta name="theme-color" content="#0b0b0b" />
+  <link rel="stylesheet" href="../css/tailwind.css" />
+</head>
+<body>
+  <header id="adminNavbar"></header>
+
+  <section class="section admin-panel">
+    <div class="container">
+      <div class="section-heading">
+        <p class="section-label">Suite Ejecutiva</p>
+        <h2>Inventario & Menaje de Gala</h2>
+        <p>Control de silletería Tiffany, mantelería, carpas, vajilla y disponibilidad de alquiler.</p>
+      </div>
+
+      <div class="gallery-admin-layout grid grid-cols-1 lg:grid-cols-[1fr_2.4fr] gap-8 mb-10">
+        <!-- PANEL LATERAL: CATEGORÍAS -->
+        <section class="dashboard-panel h-fit">
+          <div class="dashboard-panel-head">
+            <div>
+              <p class="dashboard-mini-label">Organización</p>
+              <h3 class="text-white text-lg m-0 font-medium">Categorías</h3>
+            </div>
+          </div>
+
+          <div class="p-5">
+            <form id="categoryForm" class="mb-6">
+              <div class="form-group mb-3">
+                <label for="newCategoryName" class="text-sm">Nueva categoría</label>
+                <input type="text" id="newCategoryName" placeholder="Ej: Carpas Luxury, Salas Lounge" required class="w-full box-border" />
+              </div>
+              <button type="submit" class="btn btn-primary w-full justify-center py-2.5">
+                + Agregar Categoría
+              </button>
+            </form>
+
+            <div id="categoriesChipsList" class="flex flex-col gap-2">
+              <!-- Categorías activas -->
+            </div>
+          </div>
+        </section>
+
+        <!-- PANEL PRINCIPAL: FORMULARIO DE ARTÍCULO -->
+        <section class="dashboard-panel">
+          <div class="dashboard-panel-head">
+            <div>
+              <p class="dashboard-mini-label">Gestión de Mobiliario</p>
+              <h3 id="formItemTitle" class="text-white text-lg m-0 font-medium">Agregar nuevo artículo</h3>
+            </div>
+          </div>
+
+          <form id="inventoryForm" class="quote-form p-5">
+            <input type="hidden" id="inventoryId" />
+            <input type="hidden" id="inventoryCurrentImage" />
+
+            <div class="form-group">
+              <label for="nombre">Nombre del artículo *</label>
+              <input type="text" id="nombre" placeholder="Ej: Silla Crossback Madera Rústica" required />
+            </div>
+
+            <div class="form-group">
+              <label for="categoria_id">Categoría *</label>
+              <select id="categoria_id" required>
+                <!-- Poblado dinámicamente -->
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="precio">Precio de alquiler ($) *</label>
+              <input type="number" id="precio" placeholder="Ej: 11000" min="0" required />
+            </div>
+
+            <div class="form-group">
+              <label for="unidad">Unidad de cobro</label>
+              <input type="text" id="unidad" placeholder="día/evento, unidad, set" value="día/evento" />
+            </div>
+
+            <div class="form-group">
+              <label for="cantidad_total">Stock total (unidades) *</label>
+              <input type="number" id="cantidad_total" min="0" placeholder="Ej: 160" required />
+            </div>
+
+            <div class="form-group">
+              <label for="cantidad_disponible">Stock disponible *</label>
+              <input type="number" id="cantidad_disponible" min="0" placeholder="Ej: 160" required />
+            </div>
+
+            <div class="form-group full-width">
+              <label for="descripcion">Descripción del artículo</label>
+              <textarea id="descripcion" rows="3" placeholder="Diseño vintage en madera natural con cruceta en el espaldar. La favorita para bodas campestres."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="imagen">Subir foto propia</label>
+              <input type="file" id="imagen" accept="image/*" />
+            </div>
+
+            <div class="form-group">
+              <label for="imagenUrl">O ingresar enlace de imagen</label>
+              <input type="url" id="imagenUrl" placeholder="https://ejemplo.com/foto-silla.jpg" />
+            </div>
+
+            <div class="form-group full-width hidden" id="previewWrapper">
+              <label>Vista previa de la imagen</label>
+              <div class="w-full max-w-[320px] h-[180px] rounded-xl overflow-hidden border border-white/10 bg-[#0c0c0e]">
+                <img id="imagePreview" src="" alt="Vista previa" class="w-full h-full object-cover" />
+              </div>
+            </div>
+
+            <div class="form-group full-width event-form-actions">
+              <button type="submit" class="btn btn-primary" id="saveInventoryBtn">Guardar artículo</button>
+              <button type="button" class="btn btn-secondary hidden" id="cancelEditBtn">Cancelar edición</button>
+            </div>
+          </form>
+        </section>
+      </div>
+
+      <!-- BARRA DE BÚSQUEDA Y FILTROS -->
+      <div class="bg-[#111115] border border-white/10 rounded-2xl p-5 mb-8 flex flex-wrap gap-4 items-center justify-between">
+        <div class="flex gap-3 flex-wrap flex-grow">
+          <input type="text" id="searchInventoryInput" placeholder="🔍 Buscar por nombre o descripción..." class="min-w-[250px] flex-grow px-4 py-2.5 rounded-full bg-white/5 border border-white/10 text-white outline-none focus:border-amber-400" />
+          <select id="filterCategorySelect" class="px-4 py-2.5 rounded-full bg-stone-900 border border-white/10 text-white outline-none focus:border-amber-400">
+            <option value="todos">Todas las categorías</option>
+          </select>
+        </div>
+        <p id="inventoryCounter" class="text-white/60 text-sm m-0">Cargando inventario...</p>
+      </div>
+
+      <!-- CUADRÍCULA DE ITEMS -->
+      <div id="inventoryGrid" class="quotes-grid"></div>
+    </div>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script type="module" src="../js/components/admin-navbar.js"></script>
+  <script type="module" src="../js/inventario-admin.js?v=20260907.35"></script>
+</body>
+</html>

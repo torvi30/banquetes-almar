@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Galería | Banquetes Almar</title>
+  <link rel="icon" type="image/png" href="../images/logo-almar.png" />
+  <link rel="apple-touch-icon" href="../images/logo-almar.png" />
+  <meta name="theme-color" content="#0b0b0b" />
+  <link rel="stylesheet" href="../css/tailwind.css" />
+</head>
+<body>
+  <header id="adminNavbar"></header>
+
+  <section class="section admin-panel">
+    <div class="container">
+      <div class="section-heading">
+        <p class="section-label">Panel Admin</p>
+        <h2>Administrar galería</h2>
+        <p>Crea categorías y sube imágenes organizadas profesionalmente.</p>
+      </div>
+
+      <!-- PESTAÑAS CATÁLOGO WEB: GALERÍA VS PAQUETES VS SERVICIOS VS ANUNCIO -->
+      <div class="catalog-tabs-bar">
+        <a href="./galeria.html?v=20260908.2" class="catalog-tab-btn active">📸 Galería de Gala</a>
+        <a href="./paquetes.html?v=20260908.2" class="catalog-tab-btn">💎 Paquetes Todo Incluido</a>
+        <a href="./servicios.html?v=20260908.2" class="catalog-tab-btn">🛎️ Servicios & Banquetería</a>
+        <a href="./anuncio.html" class="catalog-tab-btn">📢 Franja de Anuncio Web</a>
+      </div>
+
+      <div class="gallery-admin-layout">
+        <section class="dashboard-panel gallery-admin-sidebar">
+          <div class="dashboard-panel-head">
+            <div>
+              <p class="dashboard-mini-label">Categorías</p>
+              <h3>Crear categoría</h3>
+            </div>
+          </div>
+
+          <form id="categoryForm" class="gallery-admin-form-simple">
+            <div class="form-group full-width">
+              <label for="categoryName">Nombre de la categoría</label>
+              <input type="text" id="categoryName" placeholder="Ej: Sillas, Carpas, Almuerzos" required />
+            </div>
+
+            <div class="form-group full-width">
+              <button type="submit" class="btn btn-primary">Crear categoría</button>
+            </div>
+          </form>
+
+          <div id="categoriesList" class="dashboard-list"></div>
+        </section>
+
+        <section class="dashboard-panel gallery-admin-main">
+          <div class="dashboard-panel-head">
+            <div>
+              <p class="dashboard-mini-label">Subida</p>
+              <h3 id="galleryFormTitle">Subir imagen</h3>
+            </div>
+          </div>
+
+          <form id="galleryForm" class="gallery-admin-form" enctype="multipart/form-data">
+            <input type="hidden" id="galleryId" />
+
+            <div class="form-group full-width">
+              <label class="flex justify-between items-center mb-1.5">
+                <span>Categoría del evento</span>
+                <span class="text-xs text-amber-300">Toca una opción</span>
+              </label>
+              <input type="hidden" id="categoriaId" value="Bodas" />
+              <div class="category-pills-container" id="categoryPills">
+                <button type="button" class="category-pill active" data-cat="Bodas"><span class="pill-check">✓ </span>💍 Bodas</button>
+                <button type="button" class="category-pill" data-cat="15 Años"><span class="pill-check">✓ </span>👑 15 Años</button>
+                <button type="button" class="category-pill" data-cat="Salón Marinilla"><span class="pill-check">✓ </span>🏛️ Salón Marinilla</button>
+                <button type="button" class="category-pill" data-cat="Finca El Peñol"><span class="pill-check">✓ </span>🌲 Finca El Peñol</button>
+                <button type="button" class="category-pill" data-cat="Mobiliario"><span class="pill-check">✓ </span>🪑 Mobiliario</button>
+                <button type="button" class="category-pill" data-cat="Catering"><span class="pill-check">✓ </span>🍽️ Catering</button>
+                <button type="button" class="category-pill" data-cat="Eventos Corporativos"><span class="pill-check">✓ </span>👔 Corporativos</button>
+              </div>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="galleryTitle">Título</label>
+              <input type="text" id="galleryTitle" placeholder="Ej: Montaje boda campestre" required />
+            </div>
+
+            <div class="form-group full-width">
+              <label for="galleryDescription">Descripción</label>
+              <textarea id="galleryDescription" rows="4" placeholder="Descripción breve de la imagen..."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label>Subir fotografía propia (opcional)</label>
+              <div class="upload-dropzone" id="dropzoneBox" title="Haz clic para seleccionar un archivo">
+                <input type="file" id="galleryImage" accept="image/*" class="hidden" />
+                <div class="dropzone-content">
+                  <div class="dropzone-icon">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="17 8 12 3 7 8"></polyline>
+                      <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                  </div>
+                  <p class="dropzone-title">Haz clic o arrastra tu foto aquí</p>
+                  <p class="dropzone-subtitle">JPG, PNG o WEBP (opcional)</p>
+                  <div id="dropzonePill" class="dropzone-file-pill hidden"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="flex justify-between items-center mb-1.5">
+                <span>Vista previa y encuadre en vivo</span>
+                <span class="text-xs text-amber-300">Arrastra para encuadrar • Rueda zoom</span>
+              </label>
+              <div class="framing-studio-wrap">
+                <div class="framing-viewport" id="uploadFramingViewport" title="Haz clic y arrastra para mover y encuadrar la imagen">
+                  <img id="imagePreview" class="framing-img" src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80" alt="Vista previa" />
+                  <span class="framing-hint">👆 Arrastra para mover • Rueda para zoom</span>
+                  <span id="previewBadge" class="preview-badge block z-10">✨ Imagen por defecto para "Bodas"</span>
+                </div>
+
+                <div class="framing-controls-bar">
+                  <div class="framing-zoom-group">
+                    <button type="button" class="framing-btn" id="uploadZoomOutBtn" title="Alejar / Mermar zoom">🔍 −</button>
+                    <input type="range" class="framing-zoom-slider" id="uploadZoomSlider" min="0.2" max="3.0" step="0.01" value="1" title="Nivel de Zoom" />
+                    <button type="button" class="framing-btn" id="uploadZoomInBtn" title="Acercar zoom">🔍 +</button>
+                  </div>
+                  <div class="framing-actions-group">
+                    <button type="button" class="framing-btn" id="uploadFitBtn" title="Ajustar completa sin recortar">⤢ Completa</button>
+                    <button type="button" class="framing-btn" id="uploadResetBtn" title="Restaurar posición original">↺ Centrar</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group full-width gallery-admin-actions">
+              <button type="submit" class="btn btn-primary" id="saveGalleryBtn">Guardar imagen</button>
+              <button type="button" class="btn btn-secondary hidden" id="cancelGalleryEditBtn">Cancelar edición</button>
+            </div>
+          </form>
+        </section>
+      </div>
+
+      <div class="gallery-toolbar-pro">
+        <div>
+          <label class="text-sm text-white/60 block mb-2">Filtrar por categoría:</label>
+          <div class="gallery-filters-row" id="galleryFilterChips">
+            <button type="button" class="gallery-filter-chip active" data-cat="">Todas</button>
+            <button type="button" class="gallery-filter-chip" data-cat="Bodas">💍 Bodas</button>
+            <button type="button" class="gallery-filter-chip" data-cat="15 Años">👑 15 Años</button>
+            <button type="button" class="gallery-filter-chip" data-cat="Salón Marinilla">🏛️ Salón Marinilla</button>
+            <button type="button" class="gallery-filter-chip" data-cat="Finca El Peñol">🌲 Finca El Peñol</button>
+            <button type="button" class="gallery-filter-chip" data-cat="Mobiliario">🪑 Mobiliario</button>
+            <button type="button" class="gallery-filter-chip" data-cat="Catering">🍽️ Catering</button>
+            <button type="button" class="gallery-filter-chip" data-cat="Eventos Corporativos">👔 Corporativos</button>
+          </div>
+          <input type="hidden" id="filterCategory" value="" />
+        </div>
+
+        <div>
+          <input type="text" id="searchGallery" placeholder="🔍 Buscar por título o descripción..." />
+        </div>
+      </div>
+
+      <div id="galleryGrid" class="gallery-grid-pro"></div>
+    </div>
+  </section>
+
+  <!-- Modal de Edición Directa y Reacomodación de Galería -->
+  <div id="editGalleryModal" class="modal-edit hidden">
+    <div class="modal-content gallery-edit-modal-content">
+      <div class="flex justify-between items-center border-b border-amber-400/20 pb-3 mb-3.5">
+        <h3 class="m-0 text-white text-lg font-medium flex items-center gap-2">
+          <span>✏️</span> Editar Fotografía
+        </h3>
+        <button type="button" id="closeEditModalBtn" class="bg-white/10 border border-white/15 text-white text-lg cursor-pointer leading-none px-2.5 py-1 rounded-lg hover:bg-white/20 transition-all" title="Cerrar ventana">✕</button>
+      </div>
+
+      <form id="editModalForm" class="grid gap-3.5">
+        <input type="hidden" id="modalItemId" />
+
+        <div class="modal-grid-2col">
+          <div>
+            <label class="text-amber-300 text-sm font-medium block mb-1.5">
+              Encuadre y Zoom en vivo
+            </label>
+            <div class="framing-studio-wrap">
+              <div class="framing-viewport min-h-[155px] aspect-[4/3]" id="modalFramingViewport" title="Haz clic y arrastra para mover y encuadrar la imagen">
+                <img id="modalImagePreview" class="framing-img" src="" alt="Vista previa" />
+                <span class="framing-hint">👆 Arrastra • Rueda zoom</span>
+                <span id="modalPreviewBadge" class="preview-badge block text-[0.68rem] z-10">Foto actual</span>
+              </div>
+
+              <div class="framing-controls-bar py-1 px-2">
+                <div class="framing-zoom-group">
+                  <button type="button" class="framing-btn" id="modalZoomOutBtn" title="Alejar / Mermar zoom">🔍 −</button>
+                  <input type="range" class="framing-zoom-slider" id="modalZoomSlider" min="0.2" max="3.0" step="0.01" value="1" title="Nivel de Zoom" />
+                  <button type="button" class="framing-btn" id="modalZoomInBtn" title="Acercar zoom">🔍 +</button>
+                </div>
+                <div class="framing-actions-group">
+                  <button type="button" class="framing-btn" id="modalFitBtn" title="Ajustar completa sin recortar">⤢ Completa</button>
+                  <button type="button" class="framing-btn" id="modalResetBtn" title="Centrar">↺</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="text-amber-300 text-sm font-medium block mb-1.5">
+              Cambiar fotografía (opcional)
+            </label>
+            <div class="upload-dropzone min-h-[185px] p-4 flex flex-col justify-center items-center cursor-pointer" id="modalDropzoneBox" title="Haz clic para seleccionar nueva foto">
+              <input type="file" id="modalImageInput" accept="image/*" class="hidden" />
+              <div class="dropzone-content text-center">
+                <div class="dropzone-icon mb-1.5">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                  </svg>
+                </div>
+                <p class="dropzone-title text-sm m-0 mb-1">Haz clic o arrastra nueva foto</p>
+                <p class="dropzone-subtitle text-xs m-0">JPG, PNG o WEBP</p>
+                <div id="modalDropzonePill" class="dropzone-file-pill hidden text-xs mt-2"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="flex justify-between items-center mb-1.5">
+            <span class="text-amber-300 text-sm font-medium">Categoría</span>
+            <span class="text-xs text-white/60">Toca para seleccionar</span>
+          </label>
+          <input type="hidden" id="modalCategoria" value="Bodas" />
+          <div class="category-pills-container" id="modalCategoryPills"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="modalTitulo">Título</label>
+          <input type="text" id="modalTitulo" required placeholder="Título de la fotografía" />
+        </div>
+
+        <div class="form-group">
+          <label for="modalDescripcion">Descripción</label>
+          <textarea id="modalDescripcion" rows="3" placeholder="Descripción de la imagen..."></textarea>
+        </div>
+
+        <!-- Reacomodar posición con Vista Previa Visual en Vivo -->
+        <div class="modal-reorder-section">
+          <div class="flex justify-between items-center mb-2">
+            <label class="text-amber-300 text-sm font-semibold m-0 flex items-center gap-1.5">
+              <span>⇄</span> Vista previa del orden en la galería
+            </label>
+            <span class="text-xs text-white/60">Toca una foto o botón para reubicar</span>
+          </div>
+
+          <!-- Tira interactiva de miniaturas (Filmstrip visual) -->
+          <div class="modal-filmstrip-container" id="modalOrderFilmstrip"></div>
+
+          <!-- Explicación en vivo de la posición -->
+          <div class="modal-order-feedback" id="modalOrderFeedback"></div>
+
+          <!-- Barra de controles y botones de acción rápida -->
+          <div class="flex gap-1.5 items-center flex-wrap mt-2.5">
+            <button type="button" id="modalMoveFirstBtn" class="btn btn-secondary btn-sm text-xs px-2.5 py-1" title="Poner al inicio">⏮ Al inicio</button>
+            <button type="button" id="modalMovePrevBtn" class="btn btn-secondary btn-sm text-xs px-2.5 py-1" title="Mover una posición antes">◀ 1 antes</button>
+            <button type="button" id="modalMoveNextBtn" class="btn btn-secondary btn-sm text-xs px-2.5 py-1" title="Mover una posición después">1 después ▶</button>
+            <button type="button" id="modalMoveLastBtn" class="btn btn-secondary btn-sm text-xs px-2.5 py-1" title="Poner al final">⏭ Al final</button>
+
+            <div class="ml-auto flex items-center gap-1.5">
+              <span class="text-xs text-white/60">Posición:</span>
+              <select id="modalPosicionSelect" class="px-2.5 py-1 rounded-lg bg-[#1a1a1a] text-white border border-amber-400/35 text-xs outline-none focus:border-amber-400"></select>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mt-2">
+          <button type="submit" class="btn btn-primary" id="saveModalBtn">Guardar cambios</button>
+          <button type="button" class="btn btn-secondary" id="cancelModalBtn">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script type="module" src="../js/components/admin-navbar.js"></script>
+  <script type="module" src="../js/galeria-admin.js?v=20260907.18"></script>
+</body>
+</html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Configurar Franja de Anuncio Superior | Banquetes Almar</title>
+  <link rel="icon" type="image/png" href="../images/logo-almar.png" />
+  <link rel="apple-touch-icon" href="../images/logo-almar.png" />
+  <meta name="theme-color" content="#0b0b0b" />
+  
+  <!-- Fuentes Google -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="../css/tailwind.css" />
+</head>
+<body>
+  <header id="adminNavbar"></header>
+
+  <section class="section admin-panel">
+    <div class="container">
+      <div class="section-heading">
+        <p class="section-label">📢 COMUNICACIÓN EDITORIAL DE ALTA GAMA</p>
+        <h2>Configurar Franja de Anuncio Superior</h2>
+        <p>Personaliza el texto, badge e icono del banner superior de la página web con vista previa en tiempo real.</p>
+      </div>
+
+      <!-- PESTAÑAS CATÁLOGO WEB & COMUNICACIÓN -->
+      <div class="catalog-tabs-bar">
+        <a href="./galeria.html?v=20260908.2" class="catalog-tab-btn">📸 Galería de Gala</a>
+        <a href="./paquetes.html?v=20260908.2" class="catalog-tab-btn">💎 Paquetes Todo Incluido</a>
+        <a href="./servicios.html?v=20260908.2" class="catalog-tab-btn">🛎️ Servicios & Banquetería</a>
+        <a href="./anuncio.html" class="catalog-tab-btn active">📢 Franja de Anuncio Web</a>
+      </div>
+
+      <!-- ÁREA DE VISTA PREVIA EN VIVO (LIVE PREVIEW) -->
+      <div class="preview-stage-container">
+        <div class="preview-header-label">
+          <span>👁️ Vista Previa en Vivo (Exactamente como se ve en la Web pública)</span>
+          <span id="previewStatusPill" class="preview-status-pill active">🟢 Visible en la Web</span>
+        </div>
+
+        <div class="live-preview-box" id="livePreviewBanner">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span id="pvIcon" class="text-base">✨</span>
+            <strong id="pvTitle" class="text-amber-200 font-bold tracking-wide">Temporada de Eventos 2026-2027:</strong>
+            <span id="pvMessage" class="text-zinc-200 font-medium">Salón de Gala en Marinilla & Finca Campestre en El Peñol</span>
+          </div>
+          <div id="pvRightGroup" class="flex items-center gap-2.5 text-sm text-zinc-400 ml-auto">
+            <span id="pvBadge" class="bg-amber-500/15 border border-amber-500/40 text-amber-200 px-2.5 py-1 rounded-full text-xs font-semibold">Oriente Antioqueño</span>
+            <span id="pvDot">•</span>
+            <span id="pvSubtext">Degustación Previa de Menú Incluida</span>
+          </div>
+        </div>
+
+        <div id="pausedNotice" class="hidden mt-3 text-center text-amber-500 text-sm font-medium">
+          ⚠️ La franja está en pausa. Actualmente está oculta en la página web pública.
+        </div>
+      </div>
+
+      <!-- PLANTILLAS RÁPIDAS DE 1 CLIC (IDEAS DE GALA) -->
+      <div class="mb-6">
+        <h3 class="text-white text-xl font-serif mb-1.5">
+          ✨ Plantillas de Gala Recomendadas (Aplica con 1 Clic)
+        </h3>
+        <p class="text-zinc-400 text-sm m-0 mb-4">
+          Selecciona una propuesta comercial preconfigurada o personaliza libremente cada campo a continuación.
+        </p>
+
+        <div class="presets-grid">
+          <div class="preset-card" data-preset="temporada">
+            <h4>✨ Temporada 2026-2027</h4>
+            <p>Salón de Gala en Marinilla & Finca Campestre en El Peñol • Degustación incluida.</p>
+          </div>
+
+          <div class="preset-card" data-preset="bodas">
+            <h4>💍 Especial Bodas de Gala</h4>
+            <p>Reserva tu fecha nupcial este mes y recibe degustación VIP + 10% en mobiliario.</p>
+          </div>
+
+          <div class="preset-card" data-preset="quince">
+            <h4>👑 Quince Años de Ensueño</h4>
+            <p>Paquetes todo incluido con pista LED, luces robóticas y banquete de autor.</p>
+          </div>
+
+          <div class="preset-card" data-preset="ultimas_fechas">
+            <h4>⏳ Últimas Fechas Disponibles</h4>
+            <p>Agenda de fin de año con alta demanda. Separa tu fecha hoy con el 30%.</p>
+          </div>
+
+          <div class="preset-card" data-preset="degustacion">
+            <h4>🥂 Degustación de Gala</h4>
+            <p>Agenda tu visita guiada al salón en Marinilla y prueba nuestro menú sin costo.</p>
+          </div>
+
+          <div class="preset-card" data-preset="campestre">
+            <h4>🌄 Finca Campestre El Peñol</h4>
+            <p>Naturaleza y atardeceres frente a la represa. Cupos limitados para bodas campestres.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- FORMULARIO DE EDICIÓN -->
+      <div class="announcement-editor-card">
+        <form id="announcementForm">
+          <!-- INTERRUPTOR ON/OFF -->
+          <div class="switch-wrapper">
+            <label class="switch-toggle">
+              <input type="checkbox" id="announcementActive" checked />
+              <span class="switch-slider"></span>
+            </label>
+            <div>
+              <strong class="text-white text-base block font-bold">Mostrar Franja Superior en la Web</strong>
+              <span class="text-zinc-400 text-sm">Si lo desactivas, la barra se ocultará inmediatamente en la página principal.</span>
+            </div>
+          </div>
+
+          <!-- FILA 1: ICONO / EMOJI -->
+          <div class="form-group full-width mb-6">
+            <label class="flex justify-between items-center mb-2.5">
+              <span>Icono o Emoji del Anuncio</span>
+              <span class="text-amber-300 text-xs">Toca un emoji rápido o escribe el tuyo</span>
+            </label>
+            <div class="flex gap-2.5 items-center flex-wrap mb-2.5">
+              <button type="button" class="emoji-pill-btn" data-emoji="✨">✨</button>
+              <button type="button" class="emoji-pill-btn" data-emoji="💍">💍</button>
+              <button type="button" class="emoji-pill-btn" data-emoji="👑">👑</button>
+              <button type="button" class="emoji-pill-btn" data-emoji="🎉">🎉</button>
+              <button type="button" class="emoji-pill-btn" data-emoji="🥂">🥂</button>
+              <button type="button" class="emoji-pill-btn" data-emoji="🔥">🔥</button>
+              <button type="button" class="emoji-pill-btn" data-emoji="📢">📢</button>
+              <button type="button" class="emoji-pill-btn" data-emoji="🌟">🌟</button>
+              <button type="button" class="emoji-pill-btn" data-emoji="🎪">🎪</button>
+              <button type="button" class="emoji-pill-btn" data-emoji="🍽️">🍽️</button>
+              <input type="text" id="announcementIconInput" maxlength="4" class="w-[70px] text-center text-xl p-1.5 rounded-lg bg-white/5 border border-white/10 text-white outline-none focus:border-amber-400" value="✨" title="Emoji personalizado" />
+            </div>
+          </div>
+
+          <!-- FILA 2: TÍTULO DESTACADO Y MENSAJE PRINCIPAL -->
+          <div class="grid grid-cols-1 md:grid-cols-[1fr_1.6fr] gap-5 mb-6">
+            <div class="form-group">
+              <label for="announcementTitleInput">
+                Título / Frase Destacada (Dorado)
+              </label>
+              <input 
+                type="text" 
+                id="announcementTitleInput" 
+                placeholder="Ej: Temporada de Eventos 2026-2027:" 
+                value="Temporada de Eventos 2026-2027:" 
+                maxlength="60" 
+                required 
+              />
+              <small class="text-zinc-500 text-xs">Se resalta en negrita dorada de gala.</small>
+            </div>
+
+            <div class="form-group">
+              <label for="announcementMessageInput">
+                Mensaje Principal del Anuncio
+              </label>
+              <input 
+                type="text" 
+                id="announcementMessageInput" 
+                placeholder="Ej: Salón de Gala en Marinilla & Finca Campestre en El Peñol" 
+                value="Salón de Gala en Marinilla & Finca Campestre en El Peñol" 
+                maxlength="120" 
+                required 
+              />
+              <small class="text-zinc-500 text-xs">El texto principal que acompaña el título.</small>
+            </div>
+          </div>
+
+          <!-- FILA 3: BADGE LATERAL Y SUBTEXTO DERECHO -->
+          <div class="grid grid-cols-1 md:grid-cols-[1fr_1.4fr] gap-5 mb-8">
+            <div class="form-group">
+              <label for="announcementBadgeInput">
+                Insignia / Badge Lateral (Píldora)
+              </label>
+              <input 
+                type="text" 
+                id="announcementBadgeInput" 
+                placeholder="Ej: Oriente Antioqueño" 
+                value="Oriente Antioqueño" 
+                maxlength="30" 
+              />
+              <small class="text-zinc-500 text-xs">Aparece como etiqueta destacada (opcional).</small>
+            </div>
+
+            <div class="form-group">
+              <label for="announcementSubtextInput">
+                Detalle Complementario Derecho
+              </label>
+              <input 
+                type="text" 
+                id="announcementSubtextInput" 
+                placeholder="Ej: Degustación Previa de Menú Incluida" 
+                value="Degustación Previa de Menú Incluida" 
+                maxlength="80" 
+              />
+              <small class="text-zinc-500 text-xs">Texto secundario después de la viñeta (opcional).</small>
+            </div>
+          </div>
+
+          <!-- BARRA DE ACCIONES DE GALA -->
+          <div class="admin-actions-bar flex gap-4 items-center justify-end flex-wrap border-t border-white/10 pt-6">
+            <button type="button" class="btn btn-secondary" id="resetAnnouncementBtn">
+              🔄 Restablecer Predeterminado
+            </button>
+            <a href="../index.html" target="_blank" class="btn btn-secondary">
+              🌐 Ver en la Web
+            </a>
+            <button type="submit" class="btn btn-primary px-8 py-3 text-base">
+              💾 Guardar y Publicar en Vivo
+            </button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SweetAlert2 para notificaciones de gala -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script type="module" src="../js/components/admin-navbar.js"></script>
+  <!-- Lógica modular del panel -->
+  <script type="module" src="../js/anuncio-admin.js?v=20260909.2"></script>
+</body>
+</html>
