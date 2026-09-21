@@ -488,6 +488,10 @@ export const dbService = {
     return list.find(item => String(item.id) === String(id)) || null;
   },
 
+  async getInventory(category = "todos") {
+    return this.getRentalItems(category);
+  },
+
   async getInventoryCategories() {
     let cats = getLocal(STORAGE_KEYS.INVENTORY_CATEGORIES);
     if (!Array.isArray(cats) || cats.length === 0) {

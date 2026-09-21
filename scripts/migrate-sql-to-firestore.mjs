@@ -515,6 +515,14 @@ const ANNOUNCEMENT_DATA = {
   updatedAt: new Date().toISOString()
 };
 
+function stripUndefined(obj) {
+  const result = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) result[key] = value;
+  }
+  return result;
+}
+
 async function runMigration() {
   try {
     console.log("\n🔐 Autenticando con Firebase Auth como Administrador...");
@@ -523,160 +531,165 @@ async function runMigration() {
 
     console.log("\n📦 1. Migrando Catálogo de Mobiliario e Inventario a Firestore...");
     for (const item of INVENTORY_DATA) {
-      const clean = {
+      const clean = stripUndefined({
         id: item.id,
-        name: item.nombre,
-        category: item.categoria,
-        price: item.precio,
-        unit: item.unidad,
-        stock: item.stock || item.cantidad_total,
-        totalQuantity: item.cantidad_total,
-        availableQuantity: item.cantidad_disponible,
-        description: item.descripcion,
-        imageUrl: item.imagen,
+        name: item.nombre || "",
+        category: item.categoria || "General",
+        price: Number(item.precio || 0),
+        unit: item.unidad || "unidad",
+        stock: Number(item.stock || item.cantidad_total || 0),
+        totalQuantity: Number(item.cantidad_total || item.stock || 0),
+        availableQuantity: Number(item.cantidad_disponible || item.stock || 0),
+        description: item.descripcion || "",
+        imageUrl: item.imagen || "",
         isActive: item.activo !== false,
         createdAt: item.createdAt || new Date().toISOString()
-      };
+      });
       await setDoc(doc(db, "inventory", clean.id), clean, { merge: true });
     }
     console.log(`   ✅ ${INVENTORY_DATA.length} artículos de inventario migrados a 'inventory'.`);
 
     console.log("\n👥 2. Migrando Directorio de Clientes...");
     for (const client of CLIENTS_DATA) {
-      const clean = {
+      const clean = stripUndefined({
         id: client.id,
-        name: client.nombre,
-        phone: client.telefono,
-        email: client.email,
-        address: client.direccion,
-        city: client.ciudad,
-        documentId: client.documento,
-        eventsCount: client.totalEventos,
-        totalBilled: client.totalFacturado,
+        name: client.nombre || "",
+        phone: client.telefono || "",
+        email: client.email || "",
+        address: client.direccion || "",
+        city: client.ciudad || "Marinilla",
+        documentId: client.documento || "",
+        clientType: client.tipo_cliente || "Cliente",
+        eventsCount: Number(client.totalEventos || 0),
+        totalBilled: Number(client.totalFacturado || 0),
+        notes: client.notes || client.notas || "",
         createdAt: client.createdAt || new Date().toISOString()
-      };
+      });
       await setDoc(doc(db, "clients", clean.id), clean, { merge: true });
     }
     console.log(`   ✅ ${CLIENTS_DATA.length} clientes migrados a colección 'clients'.`);
 
     console.log("\n📅 3. Migrando Reservas y Eventos (Modelo NoSQL Desnormalizado)...");
     for (const res of RESERVATIONS_DATA) {
-      const clean = {
+      const clean = stripUndefined({
         id: res.id,
-        clientName: res.cliente,
-        phone: res.telefono,
-        eventType: res.tipo_evento,
-        guestCount: res.personas,
-        eventDate: res.fecha_evento,
-        eventTime: res.hora_evento,
-        location: res.locacion,
-        totalAmount: res.total,
-        depositAmount: res.anticipo,
-        balanceAmount: res.saldo,
-        status: res.estado,
-        notes: res.observaciones,
+        clientName: res.cliente || "",
+        phone: res.telefono || "",
+        email: res.email || "",
+        eventType: res.tipo_evento || "Evento Social",
+        guestCount: Number(res.personas || 0),
+        eventDate: res.fecha_evento || "",
+        eventTime: res.hora_evento || "17:00",
+        location: res.locacion || "Salón Almar Marinilla",
+        totalAmount: Number(res.total || res.valor_total || 0),
+        depositAmount: Number(res.anticipo || res.abono || 0),
+        balanceAmount: Number(res.saldo || 0),
+        status: res.estado || "Confirmada",
+        notes: res.observaciones || "",
         rentalItems: (res.items || []).map(it => ({
           inventoryId: it.inventario_id || it.inventoryId || "",
           name: it.nombre || it.name || "",
-          quantity: it.cantidad || it.quantity || 0,
-          unitPrice: it.precio_unitario || it.unitPrice || 0
+          quantity: Number(it.cantidad || it.quantity || 0),
+          unitPrice: Number(it.precio_unitario || it.unitPrice || 0)
         })),
         createdAt: res.createdAt || new Date().toISOString()
-      };
+      });
       await setDoc(doc(db, "reservations", clean.id), clean, { merge: true });
     }
     console.log(`   ✅ ${RESERVATIONS_DATA.length} reservas y eventos migrados a colección 'reservations'.`);
 
     console.log("\n💬 4. Migrando Solicitudes y Cotizaciones Web...");
     for (const quote of QUOTES_DATA) {
-      const clean = {
+      const clean = stripUndefined({
         id: quote.id,
-        clientName: quote.nombre,
-        phone: quote.telefono,
-        email: quote.email,
-        eventType: quote.evento,
-        location: quote.locacion,
-        guestCount: quote.personas,
-        packageId: quote.paqueteId,
-        estimatedTotal: quote.totalEstimado,
-        suggestedDeposit: quote.anticipoSugerido,
-        message: quote.mensaje,
-        status: quote.estado,
-        eventDate: quote.fechaEvento,
+        clientName: quote.nombre || "",
+        phone: quote.telefono || "",
+        email: quote.email || "",
+        eventType: quote.evento || quote.tipo_evento || "Evento Social",
+        location: quote.locacion || "Salón Almar Marinilla",
+        guestCount: Number(quote.personas || 0),
+        packageId: quote.paqueteId || "",
+        estimatedTotal: Number(quote.totalEstimado || 0),
+        suggestedDeposit: Number(quote.anticipoSugerido || 0),
+        message: quote.mensaje || "",
+        status: quote.estado || "Pendiente",
+        eventDate: quote.fechaEvento || "",
         createdAt: quote.createdAt || new Date().toISOString()
-      };
+      });
       await setDoc(doc(db, "quotes", clean.id), clean, { merge: true });
     }
     console.log(`   ✅ ${QUOTES_DATA.length} cotizaciones migradas a 'quotes'.`);
 
     console.log("\n💵 5. Migrando Transacciones Financieras y Abonos...");
     for (const pay of PAYMENTS_DATA) {
-      const clean = {
+      const clean = stripUndefined({
         id: pay.id,
-        reservationId: pay.reservaId,
-        clientName: pay.cliente,
-        amount: pay.monto,
-        concept: pay.concepto,
-        method: pay.metodo,
-        paymentDate: pay.fecha,
-        reference: pay.referencia,
+        reservationId: pay.reservaId || "",
+        clientName: pay.cliente || "",
+        amount: Number(pay.monto || 0),
+        concept: pay.concepto || "Abono de evento",
+        method: pay.metodo || "Transferencia Bancolombia",
+        paymentDate: pay.fecha || new Date().toISOString().slice(0, 10),
+        reference: pay.referencia || pay.comprobante || "",
+        status: pay.estado || "Aprobado",
         createdAt: pay.createdAt || new Date().toISOString()
-      };
+      });
       await setDoc(doc(db, "payments", clean.id), clean, { merge: true });
     }
     console.log(`   ✅ ${PAYMENTS_DATA.length} pagos migrados a colección 'payments'.`);
 
     console.log("\n✨ 6. Migrando Galería y Portafolio Visual...");
     for (const gal of GALLERY_DATA) {
-      const clean = {
+      const clean = stripUndefined({
         id: gal.id,
-        title: gal.titulo,
-        category: gal.categoria,
-        imageUrl: gal.imagen,
-        description: gal.descripcion,
-        order: gal.order || 0,
+        title: gal.titulo || "",
+        category: gal.categoria || "Gala",
+        imageUrl: gal.imagen || "",
+        description: gal.descripcion || "",
+        isCover: gal.es_portada === true,
+        order: Number(gal.order || gal.orden || 0),
         createdAt: gal.createdAt || new Date().toISOString()
-      };
+      });
       await setDoc(doc(db, "gallery", clean.id), clean, { merge: true });
     }
     console.log(`   ✅ ${GALLERY_DATA.length} montajes de galería migrados a colección 'gallery'.`);
 
     console.log("\n🛠️ 7. Migrando Catálogo de Servicios...");
     for (const srv of SERVICES_DATA) {
-      const clean = {
+      const clean = stripUndefined({
         id: srv.id,
-        name: srv.titulo,
-        category: srv.categoria,
-        imageUrl: srv.imagen,
-        description: srv.descripcion,
+        name: srv.titulo || "",
+        category: srv.categoria || "Producción",
+        imageUrl: srv.imagen || "",
+        description: srv.descripcion || "",
         isFeatured: srv.destacado === true,
         createdAt: srv.createdAt || new Date().toISOString()
-      };
+      });
       await setDoc(doc(db, "services", clean.id), clean, { merge: true });
     }
     console.log(`   ✅ ${SERVICES_DATA.length} servicios migrados a colección 'services'.`);
 
     console.log("\n🎁 8. Migrando Paquetes de Gala...");
     for (const pkg of PACKAGES_DATA) {
-      const clean = {
+      const clean = stripUndefined({
         id: pkg.id,
-        title: pkg.title,
-        category: pkg.category,
-        badge: pkg.badge,
-        description: pkg.description,
-        pricePerPerson: pkg.pricePerPerson,
-        minGuests: pkg.minGuests,
-        imageUrl: pkg.imageUrl,
-        inclusions: pkg.inclusions,
+        title: pkg.title || "",
+        category: pkg.category || "bodas",
+        badge: pkg.badge || "",
+        description: pkg.description || "",
+        pricePerPerson: Number(pkg.pricePerPerson || 0),
+        minGuests: Number(pkg.minGuests || 1),
+        imageUrl: pkg.imageUrl || "",
+        inclusions: Array.isArray(pkg.inclusions) ? pkg.inclusions : [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
-      };
+      });
       await setDoc(doc(db, "packages", clean.id), clean, { merge: true });
     }
     console.log(`   ✅ ${PACKAGES_DATA.length} paquetes de gala migrados a colección 'packages'.`);
 
     console.log("\n📢 9. Migrando Anuncio Superior Oficial...");
-    await setDoc(doc(db, "announcements", ANNOUNCEMENT_DATA.id), ANNOUNCEMENT_DATA, { merge: true });
+    await setDoc(doc(db, "announcements", ANNOUNCEMENT_DATA.id), stripUndefined(ANNOUNCEMENT_DATA), { merge: true });
     console.log(`   ✅ Anuncio superior institucional migrado a 'announcements'.`);
 
     console.log("\n===============================================================");
