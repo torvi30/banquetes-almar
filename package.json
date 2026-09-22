@@ -5,12 +5,13 @@
   "type": "module",
   "scripts": {
     "generate:env": "node scripts/generate-env.mjs",
-    "predev": "node scripts/generate-env.mjs",
-    "dev": "concurrently \"npm run watch:css\" \"npx serve -l 5000 frontend\"",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 5000",
+    "legacy:dev": "concurrently \"npm run watch:css\" \"npx serve -l 5000 frontend\"",
+    "legacy:start": "npx serve -l 5000 frontend",
     "build:css": "tailwindcss -i ./frontend/css/tailwind-input.css -o ./frontend/css/tailwind.css --minify",
     "watch:css": "tailwindcss -i ./frontend/css/tailwind-input.css -o ./frontend/css/tailwind.css --watch",
-    "prestart": "node scripts/generate-env.mjs",
-    "start": "npx serve -l 5000 frontend",
     "firebase:login": "npx firebase-tools login",
     "firebase:deploy": "npx firebase-tools deploy --only hosting",
     "admin:setup": "node scripts/create-firebase-admin.mjs",
@@ -20,13 +21,19 @@
   "author": "Banquetes Almar",
   "license": "ISC",
   "dependencies": {
-    "firebase": "^12.18.0"
+    "firebase": "^12.18.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-router-dom": "^6.30.6",
+    "sweetalert2": "^11.26.25"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.6.1",
     "concurrently": "^10.0.5",
     "postcss": "^8.5.28",
     "serve": "^14.2.4",
-    "tailwindcss": "^3.4.19"
+    "tailwindcss": "^3.4.19",
+    "vite": "^5.4.21"
   }
 }
