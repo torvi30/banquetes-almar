@@ -4,7 +4,11 @@ import { BUSINESS_INFO } from "../../config/businessInfo.js";
 
 export default function PackagesSection() {
   const [packages, setPackages] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [expandedPackages, setExpandedPackages] = useState({});
+
+  const togglePackage = (id) => {
+    setExpandedPackages((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -102,16 +106,47 @@ export default function PackagesSection() {
                       </span>
                     </div>
 
-                    {Array.isArray(pkg.inclusions) && pkg.inclusions.length > 0 && (
-                      <ul className="package-inclusions-list text-xs text-zinc-300 space-y-1.5 mb-6">
-                        {pkg.inclusions.slice(0, 6).map((inc, i) => (
-                          <li key={i} className="flex items-start gap-2">
-                            <span className="text-amber-400 font-bold">✓</span>
-                            <span>{inc}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                    {Array.isArray(pkg.inclusions) && pkg.inclusions.length > 0 && (() => {
+                      const isExpanded = !!expandedPackages[pkg.id];
+                      const hasMore = pkg.inclusions.length > 3;
+                      const visibleInclusions = isExpanded ? pkg.inclusions : pkg.inclusions.slice(0, 3);
+
+                      return (
+                        <div className="package-inclusions-wrapper mb-6">
+                          <ul className="package-inclusions-list text-xs text-zinc-300 space-y-1.5 mb-3">
+                            {visibleInclusions.map((inc, i) => (
+                              <li key={i} className="leading-relaxed">
+                                {inc}
+                              </li>
+                            ))}
+                          </ul>
+
+                          {hasMore && (
+                            <button
+                              type="button"
+                              onClick={() => togglePackage(pkg.id)}
+                              className="w-full text-xs font-medium py-2 px-3 rounded-lg border border-amber-400/25 bg-amber-400/10 hover:bg-amber-400/20 text-amber-300 transition-all flex items-center justify-center gap-1.5 group cursor-pointer"
+                            >
+                              {isExpanded ? (
+                                <>
+                                  <span>Mostrar menos</span>
+                                  <svg className="w-3.5 h-3.5 transform rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                  </svg>
+                                </>
+                              ) : (
+                                <>
+                                  <span>+ Ver {pkg.inclusions.length - 3} inclusiones más</span>
+                                  <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                  </svg>
+                                </>
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
 
