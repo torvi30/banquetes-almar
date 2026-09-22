@@ -284,37 +284,64 @@ export default function ClientPortalPage() {
                 </div>
               </div>
 
-              {/* Payments Ledger Table */}
+              {/* Payments Ledger */}
               <h4 className="text-white text-sm font-semibold mb-3">Historial de Abonos Registrados</h4>
               {payments.length === 0 ? (
                 <div className="text-center py-6 text-zinc-500 text-sm border border-zinc-800/80 rounded-xl">
                   No hay abonos registrados para esta reserva aún.
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm text-zinc-300">
-                    <thead className="text-xs uppercase bg-zinc-900/90 text-amber-300 border-b border-zinc-800">
-                      <tr>
-                        <th className="py-3 px-4">Fecha</th>
-                        <th className="py-3 px-4">Concepto</th>
-                        <th className="py-3 px-4">Método</th>
-                        <th className="py-3 px-4 text-right">Monto</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-800/60">
-                      {payments.map((p) => (
-                        <tr key={p.id} className="hover:bg-white/[0.02]">
-                          <td className="py-3 px-4">{p.paymentDate}</td>
-                          <td className="py-3 px-4">{p.concept}</td>
-                          <td className="py-3 px-4">{p.method}</td>
-                          <td className="py-3 px-4 text-right font-semibold text-emerald-400">
-                            ${p.amount.toLocaleString("es-CO")}
-                          </td>
+                <>
+                  {/* Desktop Table View */}
+                  <div className="hidden sm:block rounded-xl overflow-hidden border border-zinc-800/80">
+                    <table className="w-full text-left text-sm text-zinc-300">
+                      <thead className="text-xs uppercase bg-zinc-900/90 text-amber-300 border-b border-zinc-800">
+                        <tr>
+                          <th className="py-3 px-4">Fecha</th>
+                          <th className="py-3 px-4">Concepto</th>
+                          <th className="py-3 px-4">Método</th>
+                          <th className="py-3 px-4 text-right">Monto</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-800/60">
+                        {payments.map((p) => (
+                          <tr key={p.id} className="hover:bg-white/[0.02]">
+                            <td className="py-3 px-4">{p.paymentDate}</td>
+                            <td className="py-3 px-4">{p.concept}</td>
+                            <td className="py-3 px-4">{p.method}</td>
+                            <td className="py-3 px-4 text-right font-semibold text-emerald-400 tabular-nums">
+                              ${p.amount.toLocaleString("es-CO")}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile Cards View */}
+                  <div className="sm:hidden space-y-2.5">
+                    {payments.map((p) => (
+                      <div
+                        key={p.id}
+                        className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-3.5 space-y-2 text-xs"
+                      >
+                        <div className="flex justify-between items-center">
+                          <span className="font-mono text-zinc-400">{p.paymentDate}</span>
+                          <span className="px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">
+                            {p.method}
+                          </span>
+                        </div>
+                        <div className="font-medium text-white text-sm">{p.concept}</div>
+                        <div className="flex justify-between items-center border-t border-zinc-800/80 pt-2 font-sans">
+                          <span className="text-zinc-500">Monto:</span>
+                          <span className="font-bold text-emerald-400 text-sm tabular-nums">
+                            ${p.amount.toLocaleString("es-CO")}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
               )}
             </div>
           </div>

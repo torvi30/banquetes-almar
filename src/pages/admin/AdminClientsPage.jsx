@@ -138,23 +138,24 @@ export default function AdminClientsPage() {
           <p className="text-zinc-400 text-sm">Registra tu primer cliente o verifica el término de búsqueda.</p>
         </div>
       ) : (
-        <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden backdrop-blur-md">
-          <div className="overflow-x-auto">
+        <>
+          {/* DESKTOP TABLE VIEW (Full width, NO horizontal scroll) */}
+          <div className="hidden lg:block bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden backdrop-blur-md">
             <table className="w-full text-left text-sm text-zinc-300">
               <thead className="text-xs uppercase bg-zinc-950/80 text-amber-300 border-b border-zinc-800">
                 <tr>
-                  <th className="py-4 px-4">Anfitrión / Cliente</th>
-                  <th className="py-4 px-4">Contacto</th>
-                  <th className="py-4 px-4">Ciudad / Dirección</th>
-                  <th className="py-4 px-4">Documento</th>
-                  <th className="py-4 px-4 text-center">Eventos</th>
-                  <th className="py-4 px-4 text-center">Acciones</th>
+                  <th className="py-3.5 px-4">Anfitrión / Cliente</th>
+                  <th className="py-3.5 px-4">Contacto</th>
+                  <th className="py-3.5 px-4">Ciudad / Dirección</th>
+                  <th className="py-3.5 px-4">Documento</th>
+                  <th className="py-3.5 px-4 text-center">Eventos</th>
+                  <th className="py-3.5 px-4 text-center">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800/60">
                 {filteredClients.map((c) => (
                   <tr key={c.id} className="hover:bg-white/[0.02] transition">
-                    <td className="py-4 px-4">
+                    <td className="py-3.5 px-4">
                       <Link
                         to={`/admin/cliente?id=${c.id}`}
                         className="font-semibold text-white hover:text-amber-300 transition"
@@ -163,34 +164,34 @@ export default function AdminClientsPage() {
                       </Link>
                       <div className="text-xs text-zinc-500">{c.clientType}</div>
                     </td>
-                    <td className="py-4 px-4">
-                      <div className="font-mono text-xs">{c.phone}</div>
+                    <td className="py-3.5 px-4">
+                      <div className="font-mono text-xs text-zinc-200">{c.phone}</div>
                       <div className="text-xs text-zinc-400">{c.email}</div>
                     </td>
-                    <td className="py-4 px-4">
+                    <td className="py-3.5 px-4">
                       <div className="font-medium text-white">{c.city}</div>
                       <div className="text-xs text-zinc-500">{c.address}</div>
                     </td>
-                    <td className="py-4 px-4 font-mono text-xs text-zinc-400">
+                    <td className="py-3.5 px-4 font-mono text-xs text-zinc-400">
                       {c.documentId || "No registrada"}
                     </td>
-                    <td className="py-4 px-4 text-center">
-                      <span className="text-xs px-2.5 py-1 rounded-full font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                    <td className="py-3.5 px-4 text-center">
+                      <span className="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30 tabular-nums">
                         {c.eventsCount || 0}
                       </span>
                     </td>
-                    <td className="py-4 px-4 text-center">
+                    <td className="py-3.5 px-4 text-center">
                       <div className="flex items-center justify-center gap-1.5">
                         <Link
                           to={`/admin/cliente?id=${c.id}`}
-                          className="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xs font-semibold"
+                          className="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xs font-semibold transition"
                         >
                           👁️ Perfil
                         </Link>
                         <button
                           type="button"
                           onClick={() => handleDelete(c.id)}
-                          className="p-1.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-xs"
+                          className="p-1.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-xs transition cursor-pointer"
                           title="Eliminar cliente"
                         >
                           🗑️
@@ -202,7 +203,72 @@ export default function AdminClientsPage() {
               </tbody>
             </table>
           </div>
-        </div>
+
+          {/* MOBILE CARDS VIEW (Full width, NO horizontal scroll) */}
+          <div className="lg:hidden space-y-4">
+            {filteredClients.map((c) => (
+              <div
+                key={c.id}
+                className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-4 space-y-3 backdrop-blur-md"
+              >
+                <div className="flex justify-between items-start gap-2">
+                  <div>
+                    <Link
+                      to={`/admin/cliente?id=${c.id}`}
+                      className="font-semibold text-white text-base hover:text-amber-300 transition"
+                    >
+                      {c.name}
+                    </Link>
+                    <div className="text-xs text-zinc-400 mt-0.5">{c.clientType}</div>
+                  </div>
+                  <span className="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30 whitespace-nowrap">
+                    {c.eventsCount || 0} eventos
+                  </span>
+                </div>
+
+                <div className="p-3 bg-zinc-950/60 border border-zinc-800/80 rounded-xl space-y-1.5 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-zinc-500">Teléfono:</span>
+                    <span className="font-mono text-zinc-200">{c.phone}</span>
+                  </div>
+                  {c.email && (
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500">Correo:</span>
+                      <span className="text-zinc-300 truncate max-w-[200px]">{c.email}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-zinc-500">Ciudad:</span>
+                    <span className="text-zinc-200">{c.city || "No especificada"}</span>
+                  </div>
+                  {c.documentId && (
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500">Documento:</span>
+                      <span className="font-mono text-zinc-400">{c.documentId}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 pt-1">
+                  <Link
+                    to={`/admin/cliente?id=${c.id}`}
+                    className="flex-1 py-2 px-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold text-center transition"
+                  >
+                    👁️ Ver Perfil & Eventos
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(c.id)}
+                    className="p-2 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-xs transition cursor-pointer"
+                    title="Eliminar cliente"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* CREATE CLIENT MODAL */}

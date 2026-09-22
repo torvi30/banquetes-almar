@@ -223,23 +223,24 @@ export default function AdminInventoryPage() {
           <p className="text-zinc-400 text-sm">Añade nuevos artículos o prueba con otro filtro.</p>
         </div>
       ) : (
-        <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden backdrop-blur-md">
-          <div className="overflow-x-auto">
+        <>
+          {/* DESKTOP TABLE VIEW (Full width, NO horizontal scroll) */}
+          <div className="hidden lg:block bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden backdrop-blur-md">
             <table className="w-full text-left text-sm text-zinc-300">
               <thead className="text-xs uppercase bg-zinc-950/80 text-amber-300 border-b border-zinc-800">
                 <tr>
-                  <th className="py-4 px-4">Artículo</th>
-                  <th className="py-4 px-4">Categoría</th>
-                  <th className="py-4 px-4">Stock Disponible</th>
-                  <th className="py-4 px-4 text-right">Tarifa Alquiler</th>
-                  <th className="py-4 px-4 text-center">Estado</th>
-                  <th className="py-4 px-4 text-center">Acciones</th>
+                  <th className="py-3.5 px-4">Artículo</th>
+                  <th className="py-3.5 px-4">Categoría</th>
+                  <th className="py-3.5 px-4">Stock Disponible</th>
+                  <th className="py-3.5 px-4 text-right">Tarifa Alquiler</th>
+                  <th className="py-3.5 px-4 text-center">Estado</th>
+                  <th className="py-3.5 px-4 text-center">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800/60">
                 {filteredItems.map((item) => (
                   <tr key={item.id} className="hover:bg-white/[0.02] transition">
-                    <td className="py-4 px-4">
+                    <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3">
                         {item.imageUrl ? (
                           <img
@@ -260,20 +261,20 @@ export default function AdminInventoryPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="py-4 px-4 capitalize">{item.category}</td>
-                    <td className="py-4 px-4">
+                    <td className="py-3.5 px-4 capitalize">{item.category}</td>
+                    <td className="py-3.5 px-4">
                       <span className="font-semibold text-white">{item.stock}</span>
                       <span className="text-xs text-zinc-500 ml-1">uds</span>
                     </td>
-                    <td className="py-4 px-4 text-right font-serif font-bold text-amber-300">
+                    <td className="py-3.5 px-4 text-right font-sans font-bold text-amber-300 tabular-nums">
                       ${item.price.toLocaleString("es-CO")}
                       <span className="text-xs text-zinc-400 font-sans ml-1">/ {item.unit}</span>
                     </td>
-                    <td className="py-4 px-4 text-center">
+                    <td className="py-3.5 px-4 text-center">
                       <button
                         type="button"
                         onClick={() => handleToggleActive(item)}
-                        className={`text-xs px-3 py-1 rounded-full font-semibold border ${
+                        className={`text-xs px-3 py-1 rounded-full font-semibold border transition cursor-pointer ${
                           item.isActive
                             ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
                             : "bg-zinc-800 text-zinc-500 border-zinc-700"
@@ -282,12 +283,12 @@ export default function AdminInventoryPage() {
                         {item.isActive ? "Activo" : "Pausado"}
                       </button>
                     </td>
-                    <td className="py-4 px-4 text-center">
+                    <td className="py-3.5 px-4 text-center">
                       <div className="flex items-center justify-center gap-1.5">
                         <button
                           type="button"
                           onClick={() => openEditModal(item)}
-                          className="p-1.5 rounded-lg bg-zinc-800 text-zinc-300 hover:text-white text-xs"
+                          className="p-1.5 rounded-lg bg-zinc-800 text-zinc-300 hover:text-white text-xs transition cursor-pointer"
                           title="Editar artículo"
                         >
                           ✏️
@@ -295,7 +296,7 @@ export default function AdminInventoryPage() {
                         <button
                           type="button"
                           onClick={() => handleDelete(item.id)}
-                          className="p-1.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-xs"
+                          className="p-1.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-xs transition cursor-pointer"
                           title="Eliminar artículo"
                         >
                           🗑️
@@ -307,7 +308,84 @@ export default function AdminInventoryPage() {
               </tbody>
             </table>
           </div>
-        </div>
+
+          {/* MOBILE CARDS VIEW (Full width, NO horizontal scroll) */}
+          <div className="lg:hidden space-y-4">
+            {filteredItems.map((item) => (
+              <div
+                key={item.id}
+                className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-4 space-y-3 backdrop-blur-md"
+              >
+                <div className="flex items-start gap-3">
+                  {item.imageUrl ? (
+                    <img
+                      src={item.imageUrl}
+                      alt={item.name}
+                      className="w-14 h-14 rounded-xl object-cover border border-zinc-800 shrink-0"
+                    />
+                  ) : (
+                    <div className="w-14 h-14 rounded-xl bg-zinc-800 flex items-center justify-center text-xl shrink-0">
+                      📦
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start gap-1">
+                      <h3 className="font-semibold text-white text-base truncate">{item.name}</h3>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleActive(item)}
+                        className={`text-[11px] px-2 py-0.5 rounded-full font-semibold border shrink-0 transition ${
+                          item.isActive
+                            ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                            : "bg-zinc-800 text-zinc-500 border-zinc-700"
+                        }`}
+                      >
+                        {item.isActive ? "Activo" : "Pausado"}
+                      </button>
+                    </div>
+                    <div className="text-xs text-amber-300/80 capitalize mt-0.5">{item.category}</div>
+                    {item.description && (
+                      <p className="text-xs text-zinc-400 line-clamp-1 mt-1">{item.description}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="p-3 bg-zinc-950/60 border border-zinc-800/80 rounded-xl flex justify-between items-center text-xs">
+                  <div>
+                    <span className="text-zinc-500">Stock: </span>
+                    <span className="font-bold text-white tabular-nums">{item.stock}</span>
+                    <span className="text-zinc-400 ml-1">unidades</span>
+                  </div>
+                  <div className="font-sans">
+                    <span className="text-zinc-500">Tarifa: </span>
+                    <span className="font-bold text-amber-300 tabular-nums">
+                      ${item.price.toLocaleString("es-CO")}
+                    </span>
+                    <span className="text-zinc-400 text-[11px]">/{item.unit}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => openEditModal(item)}
+                    className="flex-1 py-2 px-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold text-center transition cursor-pointer"
+                  >
+                    ✏️ Editar Artículo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(item.id)}
+                    className="p-2 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-xs transition cursor-pointer"
+                    title="Eliminar artículo"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* CREATE / EDIT MODAL */}

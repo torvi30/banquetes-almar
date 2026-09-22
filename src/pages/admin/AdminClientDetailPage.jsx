@@ -208,30 +208,61 @@ export default function AdminClientDetailPage() {
             No hay abonos registrados para este cliente.
           </div>
         ) : (
-          <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden backdrop-blur-md">
-            <table className="w-full text-left text-sm text-zinc-300">
-              <thead className="text-xs uppercase bg-zinc-950/80 text-amber-300 border-b border-zinc-800">
-                <tr>
-                  <th className="py-3 px-4">Fecha</th>
-                  <th className="py-3 px-4">Concepto</th>
-                  <th className="py-3 px-4">Método</th>
-                  <th className="py-3 px-4 text-right">Monto</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800/60">
-                {clientPayments.map((p) => (
-                  <tr key={p.id}>
-                    <td className="py-3 px-4 font-mono text-xs">{p.paymentDate}</td>
-                    <td className="py-3 px-4">{p.concept}</td>
-                    <td className="py-3 px-4">{p.method}</td>
-                    <td className="py-3 px-4 text-right font-serif font-bold text-emerald-400">
-                      ${p.amount.toLocaleString("es-CO")}
-                    </td>
+          <>
+            {/* DESKTOP TABLE VIEW */}
+            <div className="hidden sm:block bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden backdrop-blur-md">
+              <table className="w-full text-left text-sm text-zinc-300">
+                <thead className="text-xs uppercase bg-zinc-950/80 text-amber-300 border-b border-zinc-800">
+                  <tr>
+                    <th className="py-3 px-4">Fecha</th>
+                    <th className="py-3 px-4">Concepto</th>
+                    <th className="py-3 px-4">Método</th>
+                    <th className="py-3 px-4 text-right">Monto</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-zinc-800/60">
+                  {clientPayments.map((p) => (
+                    <tr key={p.id}>
+                      <td className="py-3 px-4 font-mono text-xs">{p.paymentDate}</td>
+                      <td className="py-3 px-4">{p.concept}</td>
+                      <td className="py-3 px-4">
+                        <span className="text-xs px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">
+                          {p.method}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-right font-sans font-bold text-emerald-400 tabular-nums">
+                        ${p.amount.toLocaleString("es-CO")}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* MOBILE CARDS VIEW */}
+            <div className="sm:hidden space-y-3">
+              {clientPayments.map((p) => (
+                <div
+                  key={p.id}
+                  className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-4 space-y-2 backdrop-blur-md"
+                >
+                  <div className="flex justify-between items-start">
+                    <span className="font-mono text-xs text-zinc-400">{p.paymentDate}</span>
+                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">
+                      {p.method}
+                    </span>
+                  </div>
+                  <div className="font-medium text-white text-sm">{p.concept}</div>
+                  <div className="flex justify-between items-center border-t border-zinc-800/80 pt-2 font-sans">
+                    <span className="text-xs text-zinc-500">Monto:</span>
+                    <span className="font-bold text-emerald-400 text-base tabular-nums">
+                      ${p.amount.toLocaleString("es-CO")}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>

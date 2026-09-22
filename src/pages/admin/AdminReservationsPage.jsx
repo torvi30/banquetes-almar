@@ -259,70 +259,73 @@ export default function AdminReservationsPage() {
           <p className="text-zinc-400 text-sm">Crea una nueva reserva o ajusta los filtros de búsqueda.</p>
         </div>
       ) : (
-        <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden backdrop-blur-md">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-zinc-300">
-              <thead className="text-xs uppercase bg-zinc-950/80 text-amber-300 border-b border-zinc-800">
+        <>
+          {/* DESKTOP TABLE VIEW (Full width, NO horizontal scroll) */}
+          <div className="hidden lg:block bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden backdrop-blur-md">
+            <table className="w-full text-left text-xs sm:text-sm text-zinc-300">
+              <thead className="text-[11px] uppercase bg-zinc-950/80 text-amber-300 border-b border-zinc-800 tracking-wider">
                 <tr>
-                  <th className="py-4 px-4">Código / Cliente</th>
-                  <th className="py-4 px-4">Evento / Sede</th>
-                  <th className="py-4 px-4">Fecha & Hora</th>
-                  <th className="py-4 px-4">Invitados</th>
-                  <th className="py-4 px-4 text-right">Inversión</th>
-                  <th className="py-4 px-4 text-right">Saldo</th>
-                  <th className="py-4 px-4 text-center">Estado</th>
-                  <th className="py-4 px-4 text-center">Acciones</th>
+                  <th className="py-3.5 px-3">Código / Cliente</th>
+                  <th className="py-3.5 px-3">Evento & Sede</th>
+                  <th className="py-3.5 px-3 whitespace-nowrap">Fecha & Hora</th>
+                  <th className="py-3.5 px-3 text-center whitespace-nowrap">Invitados</th>
+                  <th className="py-3.5 px-3 text-right whitespace-nowrap">Inversión</th>
+                  <th className="py-3.5 px-3 text-right whitespace-nowrap">Saldo</th>
+                  <th className="py-3.5 px-3 text-center whitespace-nowrap">Estado</th>
+                  <th className="py-3.5 px-3 text-center whitespace-nowrap">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800/60">
                 {filteredReservations.map((r) => (
                   <tr key={r.id} className="hover:bg-white/[0.02] transition">
-                    <td className="py-4 px-4">
+                    <td className="py-3.5 px-3">
                       <div className="font-semibold text-white">{r.clientName}</div>
-                      <div className="text-xs text-amber-300/80 font-mono">{r.id}</div>
-                      <div className="text-xs text-zinc-500">{r.phone}</div>
+                      <div className="text-[11px] text-amber-300/80 font-mono">{r.id}</div>
+                      <div className="text-[11px] text-zinc-500">{r.phone}</div>
                     </td>
-                    <td className="py-4 px-4">
+                    <td className="py-3.5 px-3">
                       <div className="font-medium text-white">{r.eventType}</div>
-                      <div className="text-xs text-zinc-400 truncate max-w-xs">{r.location}</div>
+                      <div className="text-[11px] text-zinc-400 truncate max-w-xs">{r.location}</div>
                     </td>
-                    <td className="py-4 px-4">
+                    <td className="py-3.5 px-3 whitespace-nowrap">
                       <div className="font-semibold text-white">{r.eventDate}</div>
-                      <div className="text-xs text-zinc-400">{r.eventTime}</div>
+                      <div className="text-[11px] text-zinc-400">{r.eventTime}</div>
                     </td>
-                    <td className="py-4 px-4 font-medium">{r.guestCount} pers</td>
-                    <td className="py-4 px-4 text-right font-serif font-bold text-white">
+                    <td className="py-3.5 px-3 text-center font-medium whitespace-nowrap">
+                      {r.guestCount} pers
+                    </td>
+                    <td className="py-3.5 px-3 text-right font-sans font-bold text-white tabular-nums whitespace-nowrap">
                       ${r.totalAmount.toLocaleString("es-CO")}
                     </td>
-                    <td className="py-4 px-4 text-right font-serif font-bold text-amber-300">
+                    <td className="py-3.5 px-3 text-right font-sans font-bold text-amber-300 tabular-nums whitespace-nowrap">
                       ${r.balanceAmount.toLocaleString("es-CO")}
                     </td>
-                    <td className="py-4 px-4 text-center">
-                      <span className="text-xs px-2.5 py-1 rounded-full font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                    <td className="py-3.5 px-3 text-center whitespace-nowrap">
+                      <span className="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                         {r.status}
                       </span>
                     </td>
-                    <td className="py-4 px-4 text-center">
+                    <td className="py-3.5 px-3 text-center whitespace-nowrap">
                       <div className="flex items-center justify-center gap-1.5">
                         <button
                           type="button"
                           onClick={() => openQuickPayment(r)}
-                          className="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 text-xs font-semibold"
+                          className="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 text-xs font-semibold transition cursor-pointer"
                           title="Registrar abono de dinero"
                         >
-                          💵 Abono
+                          + Abono
                         </button>
                         <Link
                           to={`/admin/contrato?reservationId=${r.id}`}
-                          className="px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 text-xs font-semibold"
+                          className="px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 text-xs font-semibold transition"
                           title="Ver contrato oficial"
                         >
-                          📜 Contrato
+                          Contrato
                         </Link>
                         <button
                           type="button"
                           onClick={() => openEditModal(r)}
-                          className="p-1.5 rounded-lg bg-zinc-800 text-zinc-300 hover:text-white text-xs"
+                          className="p-1.5 rounded-lg bg-zinc-800 text-zinc-300 hover:text-white text-xs transition cursor-pointer"
                           title="Editar reserva"
                         >
                           ✏️
@@ -330,7 +333,7 @@ export default function AdminReservationsPage() {
                         <button
                           type="button"
                           onClick={() => handleDelete(r.id)}
-                          className="p-1.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-xs"
+                          className="p-1.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-xs transition cursor-pointer"
                           title="Eliminar reserva"
                         >
                           🗑️
@@ -342,7 +345,90 @@ export default function AdminReservationsPage() {
               </tbody>
             </table>
           </div>
-        </div>
+
+          {/* MOBILE CARDS VIEW (100% full width, NO sideways scroll) */}
+          <div className="lg:hidden space-y-4">
+            {filteredReservations.map((r) => (
+              <div
+                key={r.id}
+                className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-4 space-y-3 backdrop-blur-md"
+              >
+                <div className="flex justify-between items-start gap-2">
+                  <div>
+                    <h3 className="font-semibold text-white text-base">{r.clientName}</h3>
+                    <div className="text-xs text-zinc-400 flex items-center gap-2 mt-0.5">
+                      <span className="font-mono text-amber-300/90 font-medium">{r.id}</span>
+                      <span>&bull;</span>
+                      <span>{r.phone}</span>
+                    </div>
+                  </div>
+                  <span className="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
+                    {r.status}
+                  </span>
+                </div>
+
+                <div className="p-3 bg-zinc-950/60 border border-zinc-800/80 rounded-xl space-y-1.5 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-zinc-500">Evento:</span>
+                    <span className="font-medium text-white">{r.eventType}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-zinc-500">Locación:</span>
+                    <span className="text-zinc-300 truncate max-w-[200px]">{r.location}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-zinc-500">Fecha & Hora:</span>
+                    <span className="font-medium text-white">{r.eventDate} &bull; {r.eventTime}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-zinc-500">Invitados:</span>
+                    <span className="text-zinc-300">{r.guestCount} personas</span>
+                  </div>
+                  <div className="flex justify-between border-t border-zinc-800/80 pt-1.5 mt-1.5 font-sans">
+                    <span className="text-zinc-400">Inversión:</span>
+                    <span className="font-bold text-white tabular-nums">${r.totalAmount.toLocaleString("es-CO")}</span>
+                  </div>
+                  <div className="flex justify-between font-sans">
+                    <span className="text-zinc-400">Saldo Pendiente:</span>
+                    <span className="font-bold text-amber-300 tabular-nums">${r.balanceAmount.toLocaleString("es-CO")}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => openQuickPayment(r)}
+                    className="flex-1 py-2 px-2.5 rounded-xl bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 text-xs font-semibold text-center transition cursor-pointer"
+                  >
+                    + Abono
+                  </button>
+                  <Link
+                    to={`/admin/contrato?reservationId=${r.id}`}
+                    className="flex-1 py-2 px-2.5 rounded-xl bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 text-xs font-semibold text-center transition"
+                  >
+                    Contrato
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => openEditModal(r)}
+                    className="p-2 rounded-xl bg-zinc-800 text-zinc-300 hover:text-white text-xs transition cursor-pointer"
+                    title="Editar reserva"
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(r.id)}
+                    className="p-2 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-xs transition cursor-pointer"
+                    title="Eliminar reserva"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* CREATE / EDIT RESERVATION MODAL */}

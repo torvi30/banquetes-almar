@@ -189,29 +189,30 @@ export default function AdminPaymentsPage() {
           <p className="text-zinc-400 text-sm">Registra un nuevo abono para alimentar el historial.</p>
         </div>
       ) : (
-        <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden backdrop-blur-md">
-          <div className="overflow-x-auto">
+        <>
+          {/* DESKTOP TABLE VIEW (Full width, NO horizontal scroll) */}
+          <div className="hidden lg:block bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden backdrop-blur-md">
             <table className="w-full text-left text-sm text-zinc-300">
               <thead className="text-xs uppercase bg-zinc-950/80 text-amber-300 border-b border-zinc-800">
                 <tr>
-                  <th className="py-4 px-4">Fecha</th>
-                  <th className="py-4 px-4">Cliente / Reserva</th>
-                  <th className="py-4 px-4">Concepto</th>
-                  <th className="py-4 px-4">Método / Ref</th>
-                  <th className="py-4 px-4 text-right">Monto</th>
-                  <th className="py-4 px-4 text-center">Acciones</th>
+                  <th className="py-3.5 px-4">Fecha</th>
+                  <th className="py-3.5 px-4">Cliente / Reserva</th>
+                  <th className="py-3.5 px-4">Concepto</th>
+                  <th className="py-3.5 px-4">Método / Ref</th>
+                  <th className="py-3.5 px-4 text-right">Monto</th>
+                  <th className="py-3.5 px-4 text-center">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800/60">
                 {filteredPayments.map((p) => (
                   <tr key={p.id} className="hover:bg-white/[0.02] transition">
-                    <td className="py-4 px-4 font-mono text-xs">{p.paymentDate}</td>
-                    <td className="py-4 px-4">
+                    <td className="py-3.5 px-4 font-mono text-xs">{p.paymentDate}</td>
+                    <td className="py-3.5 px-4">
                       <div className="font-semibold text-white">{p.clientName}</div>
                       <div className="text-xs text-amber-300/80 font-mono">{p.reservationId}</div>
                     </td>
-                    <td className="py-4 px-4">{p.concept}</td>
-                    <td className="py-4 px-4">
+                    <td className="py-3.5 px-4">{p.concept}</td>
+                    <td className="py-3.5 px-4">
                       <span className="text-xs px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">
                         {p.method}
                       </span>
@@ -221,15 +222,15 @@ export default function AdminPaymentsPage() {
                         </div>
                       )}
                     </td>
-                    <td className="py-4 px-4 text-right font-serif font-bold text-emerald-400 text-base">
+                    <td className="py-3.5 px-4 text-right font-sans font-bold text-emerald-400 text-base tabular-nums">
                       ${p.amount.toLocaleString("es-CO")}
                     </td>
-                    <td className="py-4 px-4 text-center">
+                    <td className="py-3.5 px-4 text-center">
                       <div className="flex items-center justify-center gap-2">
                         <button
                           type="button"
                           onClick={() => setSelectedReceiptPayment(p)}
-                          className="px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 text-xs font-semibold"
+                          className="px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 text-xs font-semibold transition cursor-pointer"
                           title="Imprimir comprobante oficial"
                         >
                           📄 Recibo
@@ -237,7 +238,7 @@ export default function AdminPaymentsPage() {
                         <button
                           type="button"
                           onClick={() => handleDelete(p.id)}
-                          className="p-1.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-xs"
+                          className="p-1.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-xs transition cursor-pointer"
                           title="Anular abono"
                         >
                           🗑️
@@ -249,7 +250,68 @@ export default function AdminPaymentsPage() {
               </tbody>
             </table>
           </div>
-        </div>
+
+          {/* MOBILE CARDS VIEW (Full width, NO horizontal scroll) */}
+          <div className="lg:hidden space-y-4">
+            {filteredPayments.map((p) => (
+              <div
+                key={p.id}
+                className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-4 space-y-3 backdrop-blur-md"
+              >
+                <div className="flex justify-between items-start gap-2">
+                  <div>
+                    <h3 className="font-semibold text-white text-base">{p.clientName}</h3>
+                    <div className="text-xs text-zinc-400 flex items-center gap-2 mt-0.5">
+                      <span className="font-mono text-amber-300/90">{p.reservationId}</span>
+                      <span>&bull;</span>
+                      <span className="font-mono text-zinc-400">{p.paymentDate}</span>
+                    </div>
+                  </div>
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700 whitespace-nowrap">
+                    {p.method}
+                  </span>
+                </div>
+
+                <div className="p-3 bg-zinc-950/60 border border-zinc-800/80 rounded-xl space-y-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-zinc-500">Concepto:</span>
+                    <span className="font-medium text-white">{p.concept}</span>
+                  </div>
+                  {p.reference && (
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500">Referencia:</span>
+                      <span className="font-mono text-zinc-300">{p.reference}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between border-t border-zinc-800/80 pt-2 font-sans">
+                    <span className="text-zinc-400 font-medium">Monto Abonado:</span>
+                    <span className="font-bold text-emerald-400 text-sm tabular-nums">
+                      ${p.amount.toLocaleString("es-CO")}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedReceiptPayment(p)}
+                    className="flex-1 py-2 px-3 rounded-xl bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 text-xs font-semibold text-center transition cursor-pointer"
+                  >
+                    📄 Comprobante Recibo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(p.id)}
+                    className="p-2 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-xs transition cursor-pointer"
+                    title="Anular abono"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* NEW PAYMENT MODAL */}
