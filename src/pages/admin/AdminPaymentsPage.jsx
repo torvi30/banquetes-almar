@@ -138,23 +138,23 @@ export default function AdminPaymentsPage() {
 
       {/* FINANCIAL SUMMARY CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 backdrop-blur-md">
-          <span className="text-xs text-zinc-400 block mb-1">💰 Total Recaudado Acumulado</span>
-          <strong className="text-2xl font-serif font-bold text-emerald-400">
+        <div className="bg-zinc-900/70 border border-zinc-800 rounded-2xl p-5 backdrop-blur-md">
+          <span className="text-xs text-zinc-400 block mb-1">Total Recaudado Acumulado</span>
+          <strong className="text-2xl font-sans font-bold text-emerald-400 tabular-nums">
             ${totalCollected.toLocaleString("es-CO")}
           </strong>
         </div>
 
-        <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 backdrop-blur-md">
-          <span className="text-xs text-zinc-400 block mb-1">🧾 Total Recibos Asentados</span>
-          <strong className="text-2xl font-serif font-bold text-white">
+        <div className="bg-zinc-900/70 border border-zinc-800 rounded-2xl p-5 backdrop-blur-md">
+          <span className="text-xs text-zinc-400 block mb-1">Total Recibos Asentados</span>
+          <strong className="text-2xl font-sans font-bold text-white tabular-nums">
             {payments.length} transacciones
           </strong>
         </div>
 
-        <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 backdrop-blur-md">
-          <span className="text-xs text-zinc-400 block mb-1">📊 Promedio por Abono</span>
-          <strong className="text-2xl font-serif font-bold text-amber-300">
+        <div className="bg-zinc-900/70 border border-zinc-800 rounded-2xl p-5 backdrop-blur-md">
+          <span className="text-xs text-zinc-400 block mb-1">Promedio por Abono</span>
+          <strong className="text-2xl font-sans font-bold text-amber-300 tabular-nums">
             $
             {payments.length > 0
               ? Math.round(totalCollected / payments.length).toLocaleString("es-CO")

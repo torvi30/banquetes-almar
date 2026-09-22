@@ -9483,16 +9483,28 @@ html, body {
   /* ================= MÉTRICAS KPIS ================= */
   .admin-summary {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(1, 1fr);
     gap: 1.25rem;
     margin-bottom: 2rem;
+  }
+
+  @media (min-width: 640px) {
+    .admin-summary {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .admin-summary {
+      grid-template-columns: repeat(4, 1fr);
+    }
   }
 
   .summary-card {
     background: linear-gradient(145deg, rgba(24, 24, 30, 0.92), rgba(14, 14, 18, 0.95));
     border: 1px solid rgba(212, 175, 55, 0.22);
     border-radius: 18px;
-    padding: 1.4rem 1.5rem;
+    padding: 1.3rem 1.4rem;
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
@@ -9512,7 +9524,7 @@ html, body {
   }
 
   .summary-title {
-    font-size: 0.82rem;
+    font-size: 0.78rem;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: #a1a1aa;
@@ -9520,11 +9532,12 @@ html, body {
   }
 
   .summary-card strong {
-    font-size: 1.85rem;
+    font-size: 1.8rem;
     color: #ffffff;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    font-family: "Poppins", sans-serif;
+    font-variant-numeric: tabular-nums;
   }
 
   /* ================= FORMULARIOS Y CONTROLES ================= */
