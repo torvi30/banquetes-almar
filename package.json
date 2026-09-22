@@ -16,7 +16,9 @@
     "firebase:deploy": "npx firebase-tools deploy --only hosting",
     "admin:setup": "node scripts/create-firebase-admin.mjs",
     "db:migrate": "node scripts/migrate-sql-to-firestore.mjs",
-    "db:seed": "node seeds/seed-database.mjs"
+    "db:seed": "node seeds/seed-database.mjs",
+    "db:indexes:deploy": "npx firebase-tools deploy --only firestore:indexes",
+    "db:indexes:verify": "node scripts/verify-firestore-indexes.mjs"
   },
   "author": "Banquetes Almar",
   "license": "ISC",

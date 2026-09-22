@@ -236,6 +236,28 @@ export const dbService = {
     return list.find(p => String(p.id) === String(id)) || null;
   },
 
+  async getPackagesByCategory(category) {
+    if (db) {
+      try {
+        const q = query(
+          collection(db, "packages"),
+          where("category", "==", category),
+          orderBy("pricePerPerson", "asc")
+        );
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) {
+          const remoteItems = [];
+          snapshot.forEach(d => remoteItems.push(normalizePackage({ id: d.id, ...d.data() })));
+          return remoteItems;
+        }
+      } catch (err) {
+        console.warn("Firestore getPackagesByCategory error:", err.message);
+      }
+    }
+    const list = await this.getPackages();
+    return list.filter(p => p.category === category);
+  },
+
   async addPackage(pkgData) {
     const clean = normalizePackage({
       ...pkgData,
@@ -315,6 +337,29 @@ export const dbService = {
     return list.find(item => String(item.id) === String(id)) || null;
   },
 
+  async getInventoryByCategory(category) {
+    if (db) {
+      try {
+        const q = query(
+          collection(db, "inventory"),
+          where("category", "==", category),
+          where("isActive", "==", true),
+          orderBy("name", "asc")
+        );
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) {
+          const remoteItems = [];
+          snapshot.forEach(d => remoteItems.push(normalizeInventoryItem({ id: d.id, ...d.data() })));
+          return remoteItems;
+        }
+      } catch (err) {
+        console.warn("Firestore getInventoryByCategory error:", err.message);
+      }
+    }
+    const list = await this.getInventory();
+    return list.filter(item => item.category === category && item.isActive);
+  },
+
   async addInventoryItem(itemData) {
     const clean = normalizeInventoryItem({
       ...itemData,
@@ -392,6 +437,28 @@ export const dbService = {
   async getQuoteById(id) {
     const list = await this.getQuotes();
     return list.find(q => String(q.id) === String(id)) || null;
+  },
+
+  async getQuotesByStatus(status) {
+    if (db) {
+      try {
+        const q = query(
+          collection(db, "quotes"),
+          where("status", "==", status),
+          orderBy("createdAt", "desc")
+        );
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) {
+          const remoteItems = [];
+          snapshot.forEach(d => remoteItems.push(normalizeQuote({ id: d.id, ...d.data() })));
+          return remoteItems;
+        }
+      } catch (err) {
+        console.warn("Firestore getQuotesByStatus error:", err.message);
+      }
+    }
+    const list = await this.getQuotes();
+    return list.filter(q => q.status === status);
   },
 
   async addQuote(quoteData) {
@@ -476,6 +543,28 @@ export const dbService = {
   async getReservationById(id) {
     const list = await this.getReservations();
     return list.find(r => String(r.id) === String(id)) || null;
+  },
+
+  async getReservationsByStatus(status) {
+    if (db) {
+      try {
+        const q = query(
+          collection(db, "reservations"),
+          where("status", "==", status),
+          orderBy("eventDate", "asc")
+        );
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) {
+          const remoteItems = [];
+          snapshot.forEach(d => remoteItems.push(normalizeReservation({ id: d.id, ...d.data() })));
+          return remoteItems;
+        }
+      } catch (err) {
+        console.warn("Firestore getReservationsByStatus error:", err.message);
+      }
+    }
+    const list = await this.getReservations();
+    return list.filter(r => r.status === status);
   },
 
   async findReservationByPhoneOrCode(queryStr) {
@@ -587,6 +676,24 @@ export const dbService = {
   },
 
   async getPaymentsByReservation(reservationId) {
+    if (!reservationId) return [];
+    if (db) {
+      try {
+        const q = query(
+          collection(db, "payments"),
+          where("reservationId", "==", String(reservationId)),
+          orderBy("paymentDate", "desc")
+        );
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) {
+          const remoteItems = [];
+          snapshot.forEach(d => remoteItems.push(normalizePayment({ id: d.id, ...d.data() })));
+          return remoteItems;
+        }
+      } catch (err) {
+        console.warn("Firestore getPaymentsByReservation error:", err.message);
+      }
+    }
     const list = await this.getPayments();
     return list.filter(p => String(p.reservationId) === String(reservationId));
   },
