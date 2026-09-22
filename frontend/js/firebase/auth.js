@@ -7,9 +7,6 @@
 import { firebaseConfig, isFirebaseConfigured } from "./config.js";
 import { ENV } from "./env.js";
 
-const AUTH_USER_KEY = ENV?.AUTH_USER_KEY || "almar_current_user";
-const AUTH_TOKEN_KEY = ENV?.AUTH_TOKEN_KEY || "token";
-const AUTH_NAME_KEY = ENV?.AUTH_NAME_KEY || "adminNombre";
 
 let firebaseAuth = null;
 let authOps = null;
@@ -83,13 +80,7 @@ export const authService = {
         email: fbUser.email,
         nombre: fbUser.displayName || fbUser.email.split("@")[0],
         rol: "admin",
-        token: token
       };
-
-      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
-      localStorage.setItem(AUTH_TOKEN_KEY, user.token);
-      localStorage.setItem(AUTH_NAME_KEY, user.nombre);
-
       return user;
     } catch (authErr) {
       console.warn("Firebase Auth error:", authErr.code, authErr.message);
@@ -122,8 +113,8 @@ export const authService = {
 
   /**
    * Register a new administrator in Firebase Authentication
-   * @param {string} email
-   * @param {string} password
+   * @param {string} email 
+   * @param {string} password 
    * @param {string} [displayName]
    */
   async registerAdmin(email, password, displayName = "Administrador Almar") {
@@ -139,24 +130,18 @@ export const authService = {
     }
 
     const token = await fbUser.getIdToken();
-    const user = {
+    return {
       uid: fbUser.uid,
       email: fbUser.email,
       nombre: displayName || fbUser.email.split("@")[0],
       rol: "admin",
       token
     };
-
-    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
-    localStorage.setItem(AUTH_TOKEN_KEY, user.token);
-    localStorage.setItem(AUTH_NAME_KEY, user.nombre);
-
-    return user;
   },
 
   /**
    * Listen to Firebase auth state changes in real time
-   * @param {Function} callback
+   * @param {Function} callback 
    */
   async onAuthStateChanged(callback) {
     const live = await getFirebaseAuthInstance();
@@ -172,9 +157,6 @@ export const authService = {
               rol: "admin",
               token
             };
-            localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
-            localStorage.setItem(AUTH_TOKEN_KEY, token);
-            localStorage.setItem(AUTH_NAME_KEY, user.nombre);
             callback(user);
           });
         } else {
@@ -186,33 +168,39 @@ export const authService = {
   },
 
   /**
-   * Get currently authenticated user data
+   * Get currently authenticated user data directly from Firebase Auth
    * @returns {Object|null}
    */
   getCurrentUser() {
-    try {
-      const user = localStorage.getItem(AUTH_USER_KEY);
-      return user ? JSON.parse(user) : null;
-    } catch (e) {
-      return null;
+    if (firebaseAuth && firebaseAuth.currentUser) {
+      const fbUser = firebaseAuth.currentUser;
+      return {
+        uid: fbUser.uid,
+        email: fbUser.email,
+        nombre: fbUser.displayName || fbUser.email.split("@")[0],
+        rol: "admin"
+      };
     }
+    return null;
   },
 
   /**
-   * Check if an active session token exists
+   * Check if an active session exists in Firebase Auth
    * @returns {boolean}
    */
   isAuthenticated() {
-    return Boolean(localStorage.getItem(AUTH_TOKEN_KEY));
+    return Boolean(firebaseAuth && firebaseAuth.currentUser);
   },
 
   /**
-   * Clear local session storage
+   * Clear local session storage if legacy keys remain
    */
   clearSession() {
-    localStorage.removeItem(AUTH_USER_KEY);
-    localStorage.removeItem(AUTH_TOKEN_KEY);
-    localStorage.removeItem(AUTH_NAME_KEY);
+    try {
+      localStorage.removeItem("almar_current_user");
+      localStorage.removeItem("token");
+      localStorage.removeItem("adminNombre");
+    } catch (e) {}
   },
 
   /**

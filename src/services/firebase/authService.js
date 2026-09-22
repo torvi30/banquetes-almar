@@ -7,10 +7,6 @@ import {
 } from "firebase/auth";
 import { auth, isFirebaseConfigured } from "./config.js";
 
-const AUTH_USER_KEY = process.env.AUTH_USER_KEY || "almar_current_user";
-const AUTH_TOKEN_KEY = process.env.AUTH_TOKEN_KEY || "token";
-const AUTH_NAME_KEY = process.env.AUTH_NAME_KEY || "adminNombre";
-
 export const authService = {
   /**
    * Log in using Firebase Authentication with email & password
@@ -32,19 +28,13 @@ export const authService = {
       const fbUser = userCredential.user;
       const token = await fbUser.getIdToken();
 
-      const user = {
+      return {
         uid: fbUser.uid,
         email: fbUser.email,
         name: fbUser.displayName || fbUser.email.split("@")[0],
         role: "admin",
         token: token
       };
-
-      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
-      localStorage.setItem(AUTH_TOKEN_KEY, user.token);
-      localStorage.setItem(AUTH_NAME_KEY, user.name);
-
-      return user;
     } catch (authErr) {
       console.warn("Firebase Auth error:", authErr.code, authErr.message);
 
@@ -88,19 +78,13 @@ export const authService = {
     }
 
     const token = await fbUser.getIdToken();
-    const user = {
+    return {
       uid: fbUser.uid,
       email: fbUser.email,
       name: displayName || fbUser.email.split("@")[0],
       role: "admin",
       token
     };
-
-    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
-    localStorage.setItem(AUTH_TOKEN_KEY, user.token);
-    localStorage.setItem(AUTH_NAME_KEY, user.name);
-
-    return user;
   },
 
   /**
@@ -122,9 +106,6 @@ export const authService = {
           role: "admin",
           token
         };
-        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
-        localStorage.setItem(AUTH_TOKEN_KEY, token);
-        localStorage.setItem(AUTH_NAME_KEY, user.name);
         callback(user);
       } else {
         this.clearSession();
@@ -134,31 +115,35 @@ export const authService = {
   },
 
   /**
-   * Get currently authenticated user data from local storage
+   * Get currently authenticated user data directly from Firebase Auth instance
    */
   getCurrentUser() {
-    try {
-      const user = localStorage.getItem(AUTH_USER_KEY);
-      return user ? JSON.parse(user) : null;
-    } catch (e) {
-      return null;
-    }
+    if (!auth || !auth.currentUser) return null;
+    const fbUser = auth.currentUser;
+    return {
+      uid: fbUser.uid,
+      email: fbUser.email,
+      name: fbUser.displayName || fbUser.email.split("@")[0],
+      role: "admin"
+    };
   },
 
   /**
-   * Check if an active session token exists
+   * Check if an active session exists in Firebase Auth
    */
   isAuthenticated() {
-    return Boolean(localStorage.getItem(AUTH_TOKEN_KEY));
+    return Boolean(auth && auth.currentUser);
   },
 
   /**
-   * Clear local session storage
+   * Clear legacy session storage if any existed previously
    */
   clearSession() {
-    localStorage.removeItem(AUTH_USER_KEY);
-    localStorage.removeItem(AUTH_TOKEN_KEY);
-    localStorage.removeItem(AUTH_NAME_KEY);
+    try {
+      localStorage.removeItem("almar_current_user");
+      localStorage.removeItem("token");
+      localStorage.removeItem("adminNombre");
+    } catch (e) {}
   },
 
   /**

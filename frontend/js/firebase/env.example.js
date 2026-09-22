@@ -11,9 +11,6 @@ export const ENV = {
   FIREBASE_MESSAGING_SENDER_ID: "",
   FIREBASE_APP_ID: "",
   FIREBASE_MEASUREMENT_ID: "",
-  AUTH_USER_KEY: "almar_current_user",
-  AUTH_TOKEN_KEY: "token",
-  AUTH_NAME_KEY: "adminNombre",
   STORAGE_KEY_PREFIX: "almar_"
 };
 
