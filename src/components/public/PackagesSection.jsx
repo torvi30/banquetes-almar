@@ -4,6 +4,7 @@ import { BUSINESS_INFO } from "../../config/businessInfo.js";
 
 export default function PackagesSection() {
   const [packages, setPackages] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [expandedPackages, setExpandedPackages] = useState({});
 
   const togglePackage = (id) => {
