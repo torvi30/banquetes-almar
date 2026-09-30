@@ -11,6 +11,7 @@ import {
 } from "firebase/firestore";
 import { db } from "./config.js";
 import { DEFAULT_ANNOUNCEMENT } from "../../config/businessInfo.js";
+import { DEFAULT_GALLERY_ITEMS, DEFAULT_GALLERY_CATEGORIES } from "../../config/defaultGallery.js";
 
 // Local storage prefix
 const storagePrefix = process.env.STORAGE_KEY_PREFIX || "almar_";
@@ -939,21 +940,15 @@ export const dbService = {
       }
     }
     const localItems = getLocal(STORAGE_KEYS.GALLERY);
-    return Array.isArray(localItems) ? localItems.map(normalizeGalleryItem) : [];
+    if (Array.isArray(localItems) && localItems.length > 0) {
+      return localItems.map(normalizeGalleryItem);
+    }
+    return DEFAULT_GALLERY_ITEMS.map(normalizeGalleryItem);
   },
 
   async getGalleryCategories() {
-    const defaultCats = [
-      "Bodas",
-      "15 Años",
-      "Salón Marinilla",
-      "Finca El Peñol",
-      "Mobiliario",
-      "Catering",
-      "Eventos Corporativos"
-    ];
     const stored = getLocal(STORAGE_KEYS.GALLERY_CATEGORIES);
-    return Array.isArray(stored) && stored.length ? stored : defaultCats;
+    return Array.isArray(stored) && stored.length ? stored : DEFAULT_GALLERY_CATEGORIES;
   },
 
   async addGalleryItem(itemData) {

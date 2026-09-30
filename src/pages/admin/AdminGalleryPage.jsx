@@ -25,7 +25,7 @@ export default function AdminGalleryPage() {
       dbService.getGalleryCategories()
     ]);
     setItems(gal || []);
-    setCategories(cats || ["Bodas", "15 Años", "Salón Marinilla", "Finca El Peñol", "Mobiliario"]);
+    setCategories(cats || ["Bodas", "15 Años", "Cumpleaños", "Salón Marinilla", "Finca El Peñol", "Mobiliario", "Eventos Corporativos"]);
     setLoading(false);
   };
 
