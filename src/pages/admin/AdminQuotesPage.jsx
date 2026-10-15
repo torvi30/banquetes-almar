@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { dbService } from "../../services/firebase/dbService.js";
 import { alertService } from "../../services/alertService.js";
 import { BUSINESS_INFO } from "../../config/businessInfo.js";
+import QuotePrintModal from "../../components/common/QuotePrintModal.jsx";
 
 const STATUS_OPTIONS = [
   { value: "Pending", label: "Nuevo / Pendiente", color: "bg-amber-500/15 text-amber-300 border-amber-500/30" },
@@ -15,7 +16,30 @@ export default function AdminQuotesPage() {
   const [filterStatus, setFilterStatus] = useState("todos");
   const [search, setSearch] = useState("");
   const [selectedQuote, setSelectedQuote] = useState(null);
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [quoteToPrint, setQuoteToPrint] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const handleOpenPrintModal = (q) => {
+    setQuoteToPrint({
+      id: q.id,
+      createdAt: q.createdAt,
+      clientName: q.clientName,
+      phone: q.phone,
+      email: q.email || "",
+      eventType: q.eventType,
+      eventDate: q.eventDate || "Por convenir",
+      guestCount: q.guestCount || 50,
+      location: q.location || "Salón de Gala Banquetes Almar (Marinilla)",
+      catering: q.catering || "Banquete de Gala y Alta Cocina",
+      staging: q.staging || "Sillería Tiffany de Gala y Mantelería Fina",
+      addons: q.addons || [],
+      total: q.estimatedTotal || 0,
+      depositSuggested: Math.round((q.estimatedTotal || 0) * 0.3),
+      notes: q.message || ""
+    });
+    setIsPrintModalOpen(true);
+  };
 
   const loadQuotes = async () => {
     setLoading(true);
@@ -267,6 +291,15 @@ export default function AdminQuotesPage() {
 
                   <button
                     type="button"
+                    onClick={() => handleOpenPrintModal(q)}
+                    className="py-2 px-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 text-xs font-semibold flex items-center gap-1"
+                    title="Generar y descargar Proforma PDF"
+                  >
+                    🖨️ PDF
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={() => setSelectedQuote(q)}
                     className="p-2 rounded-xl bg-zinc-800 text-zinc-300 hover:text-white text-xs"
                     title="Ver detalles completos"
@@ -353,7 +386,18 @@ export default function AdminQuotesPage() {
             <div className="flex gap-3">
               <button
                 type="button"
-                className="btn-apple-secondary flex-1 justify-center py-2.5"
+                className="btn-apple-primary flex-1 justify-center py-2.5 text-xs font-bold"
+                onClick={() => {
+                  const q = selectedQuote;
+                  setSelectedQuote(null);
+                  handleOpenPrintModal(q);
+                }}
+              >
+                🖨️ Descargar Proforma PDF
+              </button>
+              <button
+                type="button"
+                className="btn-apple-secondary flex-1 justify-center py-2.5 text-xs"
                 onClick={() => setSelectedQuote(null)}
               >
                 Cerrar
@@ -362,6 +406,13 @@ export default function AdminQuotesPage() {
           </div>
         </div>
       )}
+
+      {/* REUSABLE PRINTABLE PROFORMA MODAL */}
+      <QuotePrintModal
+        isOpen={isPrintModalOpen}
+        onClose={() => setIsPrintModalOpen(false)}
+        quoteData={quoteToPrint}
+      />
     </div>
   );
 }

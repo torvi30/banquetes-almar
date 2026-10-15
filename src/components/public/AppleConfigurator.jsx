@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { dbService } from "../../services/firebase/dbService.js";
 import { BUSINESS_INFO } from "../../config/businessInfo.js";
+import QuotePrintModal from "../common/QuotePrintModal.jsx";
 
 const PRICING_MATRIX = {
   celebrations: {
@@ -848,132 +849,28 @@ Solicito verificar disponibilidad de fecha en el salón de Marinilla (Calle 29 #
         </div>
       )}
 
-      {/* FORMAL PROPOSAL MODAL (PRINTABLE PDF VIEW) */}
-      {isProposalModalOpen && (
-        <div className="apple-modal-overlay open">
-          <div className="apple-modal-content" id="printableProposal">
-            <button
-              type="button"
-              className="apple-modal-close"
-              onClick={() => setIsProposalModalOpen(false)}
-            >
-              &times;
-            </button>
-
-            <div
-              style={{
-                textAlign: "center",
-                borderBottom: "1px solid var(--apple-border)",
-                paddingBottom: "1.5rem",
-                marginBottom: "1.5rem"
-              }}
-            >
-              <h2
-                style={{
-                  fontFamily: "'Playfair Display', serif",
-                  color: "var(--apple-gold-light)",
-                  fontSize: "1.8rem"
-                }}
-              >
-                Banquetes Almar
-              </h2>
-              <p style={{ fontSize: "0.85rem", color: "var(--apple-text-secondary)" }}>
-                {BUSINESS_INFO.slogan}
-              </p>
-              <p style={{ fontSize: "0.8rem", color: "var(--apple-text-tertiary)" }}>
-                📍 {BUSINESS_INFO.mainAddress} • 📞 {BUSINESS_INFO.mainPhone}
-              </p>
-            </div>
-
-            <div style={{ marginBottom: "1.5rem" }}>
-              <h3 style={{ fontSize: "1.1rem", color: "#fff", marginBottom: "0.8rem" }}>
-                Resumen de la Propuesta:
-              </h3>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem", color: "#ddd" }}>
-                <tbody>
-                  <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                    <td style={{ padding: "0.5rem 0" }}>Celebración:</td>
-                    <td style={{ textAlign: "right", fontWeight: 600, color: "#fff" }}>
-                      {activeCelebrationLabel}
-                    </td>
-                  </tr>
-                  <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                    <td style={{ padding: "0.5rem 0" }}>Invitados:</td>
-                    <td style={{ textAlign: "right", fontWeight: 600, color: "#fff" }}>
-                      {guests} personas
-                    </td>
-                  </tr>
-                  <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                    <td style={{ padding: "0.5rem 0" }}>Locación:</td>
-                    <td style={{ textAlign: "right", fontWeight: 600, color: "#fff" }}>
-                      {PRICING_MATRIX.locations[location]?.label}
-                    </td>
-                  </tr>
-                  <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                    <td style={{ padding: "0.5rem 0" }}>Gastronomía:</td>
-                    <td style={{ textAlign: "right", fontWeight: 600, color: "#fff" }}>
-                      {PRICING_MATRIX.caterings[catering]?.label}
-                    </td>
-                  </tr>
-                  <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                    <td style={{ padding: "0.5rem 0" }}>Mobiliario & Estilo:</td>
-                    <td style={{ textAlign: "right", fontWeight: 600, color: "#fff" }}>
-                      {PRICING_MATRIX.stagings[staging]?.label}
-                    </td>
-                  </tr>
-                  {selectedAddons.size > 0 && (
-                    <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                      <td style={{ padding: "0.5rem 0", verticalAlign: "top" }}>Producción y Adicionales:</td>
-                      <td style={{ textAlign: "right", color: "var(--apple-gold-light)" }}>
-                        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                          {Array.from(selectedAddons).map((id) => (
-                            <li key={id}>{PRICING_MATRIX.addons[id]?.label || id}</li>
-                          ))}
-                        </ul>
-                      </td>
-                    </tr>
-                  )}
-                  <tr style={{ borderTop: "2px solid var(--apple-gold)", fontWeight: 700 }}>
-                    <td style={{ padding: "0.8rem 0", color: "#fff", fontSize: "1.05rem" }}>
-                      Inversión Total Estimada:
-                    </td>
-                    <td style={{ textAlign: "right", color: "var(--apple-gold-light)", fontSize: "1.3rem" }}>
-                      ${calc.total.toLocaleString("es-CO")} COP
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "0.2rem 0", color: "#aaa", fontSize: "0.85rem" }}>
-                      Anticipo sugerido (30%):
-                    </td>
-                    <td style={{ textAlign: "right", color: "#fff", fontSize: "0.95rem" }}>
-                      ${calc.depositSuggested.toLocaleString("es-CO")} COP
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-              <button
-                type="button"
-                className="btn-apple-primary"
-                style={{ flex: 1, justifyContent: "center" }}
-                onClick={() => window.print()}
-              >
-                🖨️ Imprimir / Guardar en PDF
-              </button>
-              <button
-                type="button"
-                className="btn-apple-secondary"
-                style={{ justifyContent: "center" }}
-                onClick={() => setIsProposalModalOpen(false)}
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* FORMAL PROPOSAL MODAL (HIGH-FIDELITY PRINTABLE PDF) */}
+      <QuotePrintModal
+        isOpen={isProposalModalOpen}
+        onClose={() => setIsProposalModalOpen(false)}
+        quoteData={{
+          id: "COT-" + (leadPhone ? leadPhone.replace(/\D/g, "").slice(-4) : "ONLINE"),
+          createdAt: new Date().toISOString(),
+          clientName: leadName.trim() || "Anfitrión Distinguido",
+          phone: leadPhone.trim(),
+          email: "",
+          eventType: activeCelebrationLabel,
+          eventDate: leadDate || "Fecha por convenir",
+          guestCount: guests,
+          location: PRICING_MATRIX.locations[location]?.label || "Salón de Gala Almar",
+          catering: PRICING_MATRIX.caterings[catering]?.label || "Menú de Gala (2 Tiempos)",
+          staging: PRICING_MATRIX.stagings[staging]?.label || "Sillas Tiffany Doradas",
+          addons: Array.from(selectedAddons).map((id) => PRICING_MATRIX.addons[id]?.label || id),
+          total: calc.total,
+          depositSuggested: calc.depositSuggested,
+          notes: leadNotes.trim()
+        }}
+      />
     </section>
   );
 }

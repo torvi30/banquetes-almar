@@ -15,11 +15,11 @@ export default function RentalCartDrawer() {
   return (
     <>
       <div
-        className={`cart-overlay ${isCartOpen ? "open" : ""}`}
+        className={`cart-overlay no-print print:hidden ${isCartOpen ? "open" : ""}`}
         id="cartOverlay"
         onClick={closeCart}
       />
-      <aside className={`cart-drawer ${isCartOpen ? "open" : ""}`} id="cartDrawer">
+      <aside className={`cart-drawer no-print print:hidden ${isCartOpen ? "open" : ""}`} id="cartDrawer">
         <div className="cart-drawer-header">
           <h3>Carrito de Alquiler</h3>
           <button

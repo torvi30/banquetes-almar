@@ -12,6 +12,19 @@ export default defineConfig(({ mode }) => {
     define: {
       // Expose environment variables to client code
       "process.env": env
+    },
+    build: {
+      chunkSizeWarningLimit: 700,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            "vendor-react": ["react", "react-dom", "react-router-dom"],
+            "vendor-firebase": ["firebase/app", "firebase/auth", "firebase/firestore"],
+            "vendor-ui": ["sweetalert2"]
+          }
+        }
+      }
     }
   };
 });
+

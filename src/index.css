@@ -11822,20 +11822,25 @@ html, body {
     box-shadow: none;
     padding: 0;
   }
-  .contract-sheet, .contract-sheet * {
+  .contract-sheet, .contract-sheet *,
+  .printable-sheet, .printable-sheet * {
     visibility: visible;
   }
-  .contract-sheet {
+  .contract-sheet,
+  .printable-sheet {
     position: relative;
     box-shadow: none !important;
     border: none !important;
     margin: 0 !important;
     max-width: 100% !important;
     width: 100% !important;
-    padding: 15mm 18mm !important;
+    padding: 10mm 14mm !important;
     border-radius: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
   }
-  .contract-sheet::before {
+  .contract-sheet::before,
+  .printable-sheet::before {
     border-color: #c89b3c !important;
   }
   .signatures-section, .verification-footer, .financial-card {

@@ -13,7 +13,7 @@ export default function WhatsAppConciergeModal() {
       {/* VIP WHATSAPP FLOATING BUTTON */}
       <a
         href={whatsappUrl}
-        className="whatsapp-vip-float"
+        className="whatsapp-vip-float no-print print:hidden"
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Atención VIP WhatsApp"
@@ -32,7 +32,7 @@ export default function WhatsAppConciergeModal() {
 
       {/* FLOATING CART BUTTON */}
       <button
-        className="cart-floating-btn open-cart-btn"
+        className="cart-floating-btn open-cart-btn no-print print:hidden"
         type="button"
         onClick={openCart}
         aria-label="Ver carrito de alquiler"
